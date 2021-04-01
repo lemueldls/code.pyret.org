@@ -1,7 +1,6 @@
 var Q = require("q");
 var gapi = require("googleapis").google; // https://github.com/googleapis/google-auth-library-nodejs/issues/355
 var path = require("path");
-var uuid = require("node-uuid");
 
 var BACKREF_KEY = "originalProgram";
 

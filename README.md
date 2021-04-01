@@ -1,6 +1,6 @@
-[![Build Status](https://travis-ci.org/brownplt/code.pyret.org.svg)](https://travis-ci.org/brownplt/code.pyret.org)
-
 # code.pyret.org
+
+[![Build Status](https://travis-ci.org/brownplt/code.pyret.org.svg)](https://travis-ci.org/brownplt/code.pyret.org)
 
 ## Simple Configuration
 
@@ -11,18 +11,18 @@ but using Heroku tools makes sure you run like things do in production.
 
 First, get the [Heroku toolbelt](https://toolbelt.heroku.com/).
 
-Then, copy `.env.example` to `.env`. If all you want to do is run Pyret code and
-test out the REPL, you only need to edit a few variables. If you want to use the
-standalone pyret that comes with the checkout, you can just set
+Then, copy `.env.defaults` to `.env`. If all you want to do is run Pyret code
+and test out the REPL, you only need to edit a few variables. If you want to use
+the standalone pyret that comes with the checkout, you can just set
 
-```
+```env
 PYRET="http://localhost:5000/js/cpo-main.jarr"
 ```
 
 Then you can run
 
-```
-npm run local-install
+```console
+npm i
 ln -s node_modules/pyret-lang pyret
 npm run build
 ```
@@ -32,7 +32,7 @@ and the dependencies will be installed.
 To run the server (you can let it running in a separate tab -- it doesn't need
 to be terminated across builds), run:
 
-```
+```console
 npm start
 ```
 
@@ -40,7 +40,7 @@ The editor will be served from `http://localhost:5000/editor`.
 
 If you edit JavaScript or HTML files in `src/web`, run
 
-```
+```console
 npm run build
 ```
 
@@ -53,7 +53,7 @@ If you'd like to run with a development copy of Pyret, you can simply symlink
 `code.pyret.org` and `pyret-lang` both checked out in the same directory, you
 could just run this from the CPO directory:
 
-```
+```console
 ln -s ../pyret-lang pyret
 ```
 
@@ -61,7 +61,7 @@ ln -s ../pyret-lang pyret
 
 In order to have share links, saving, and other docs-related functionality work,
 you need to add to your `.env` a Google client secret, a client ID, a browser
-API key, and a server API key. You'll copy `.env.example` to `.env`, and
+API key, and a server API key. You'll copy `.env.defaults` to `.env`, and
 populate several from your dashboard at Google.
 
 At <https://console.developers.google.com/project>, make a project, then:
@@ -69,7 +69,9 @@ At <https://console.developers.google.com/project>, make a project, then:
 - For `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`, which are used for
   authenticating users:
 
-       Credentials -> Create Credentials -> OAuth Client Id
+  ```text
+  Credentials -> Create Credentials -> OAuth Client Id
+  ```
 
   For development, you should set the javascript origins to
   `http://localhost:5000` and the redirect URI to
@@ -78,7 +80,9 @@ At <https://console.developers.google.com/project>, make a project, then:
 - For `GOOGLE_API_KEY`, which is used in the browser to make certain public
   requests when users are not logged in yet:
 
-       Credentials -> Create Credentials -> API Key -> Browser Key
+  ```text
+  Credentials -> Create Credentials -> API Key -> Browser Key
+  ```
 
   Again, you should use `http://localhost:5000` as the referer for development.
 
@@ -92,7 +96,7 @@ platform-specific. You will need
 [chromedriver](https://sites.google.com/a/chromium.org/chromedriver/) to be on
 your path. Then run running:
 
-```
+```console
 npm install selenium-webdriver mocha
 npm run mocha
 ```
@@ -100,7 +104,7 @@ npm run mocha
 with Selenium and mocha installed and a development server running. You can
 refine this with, e.g.
 
-```
+```console
 npm run mocha -- -g "errors"
 ```
 
@@ -115,7 +119,7 @@ of your tests, which can be helpful with debugging.
 First, add your sauce username and access key (from your account page at Sauce)
 to `.env`:
 
-```
+```env
 SAUCE_USERNAME="gibbs"
 SAUCE_ACCESS_KEY="deadbeef-2671-11e5-a6a1-206a8a0824be"
 ```
@@ -127,21 +131,21 @@ Second, install the Sauce Connect client for your system from
 for starting the server (the default configuration should work fine), using the
 same username and access key, for example, on Ubuntu I run:
 
-```
+```console
 ~/sc-4.3.9-linux32$ ./bin/sc -u gibbs -k deadbeef-2671-11e5-a6a1-206a8a0824be
 ```
 
 That sets up a tunnel to Sauce Labs, and on the same machine you should now be
 able to run:
 
-```
-heroku local:run ./node_modules/mocha/bin/mocha
+```console
+npm run mocha
 ```
 
 To run only a particular file, pass in one of the filenames in `test/`, e.g.
 
-```
-heroku local:run ./node_modules/mocha/bin/mocha test/world.js
+```console
+npm run mocha test/world.js
 ```
 
 Check out how `world.js` and `image.js` are written: they look up files from
@@ -172,28 +176,30 @@ things up in the order below
 2. Navigate to your local code.pyret.org repository in a terminal.
 3. Run `heroku create <appname>`. This will create an app on Heroku linked to
    your local repository.
-4. Set the config variables found in `.env` (or `.env.example`) on Heroku. You
+4. Set the config variables found in `.env` (or `.env.defaults`) on Heroku. You
    can enter them using `heroku config:set NAME1=VALUE1 NAME2=VALUE2` or in the
    online control panel. There are 3 config variables you should pay special
    attention to:
 
-- add key `GIT_BRANCH`, value should be your branch name
-- add key `GIT_REV`, value should be your branch name
-- change `PYRET` from local host to a URL that points to cpo-main.jarr from
-  build folder. Make sure URL ends in js instead of jarr.
+   - add key `GIT_BRANCH`, value should be your branch name
+   - add key `GIT_REV`, value should be your branch name
+   - change `PYRET` from local host to a URL that points to cpo-main.jarr from
+     build folder. Make sure URL ends in js instead of jarr.
 
-5.  Add a Redis Cloud database using `heroku addons:add rediscloud` or at
-    addons.heroku.com. You will likely have to verify first (enter a credit
-    card), but you shouldn’t actually be charged for the most basic level (but
-    check for yourself!).
-6.  Now, still in your code.pyret.org repo, run
+5. Add a Redis Cloud database using `heroku addons:add rediscloud` or at
+   addons.heroku.com. You will likely have to verify first (enter a credit
+   card), but you shouldn't actually be charged for the most basic level (but
+   check for yourself!).
+6. Now, still in your code.pyret.org repo, run
 
-        git push heroku <localbranch>:master
-        heroku ps:scale web=1
+   ```console
+   git push heroku <localbranch>:master
+   heroku ps:scale web=1
+   ```
 
-7.  Now run `heroku open` or visit appname.herokuapp.com.
-8.  Tips for redeploy: if you don't see a successful build under heroku
-    webiste's activity tab, but get "everything is up-to-date" when you run
-    `git push heroku <localbranch>:master`, or your build doesn't look
-    up-to-date, you can do an empty commit:
-    `git commit --allow-empty -m "force deploy"`
+7. Now run `heroku open` or visit appname.herokuapp.com.
+8. Tips for redeploy: if you don't see a successful build under heroku webiste's
+   activity tab, but get "everything is up-to-date" when you run
+   `git push heroku <localbranch>:master`, or your build doesn't look
+   up-to-date, you can do an empty commit:
+   `git commit --allow-empty -m "force deploy"`
