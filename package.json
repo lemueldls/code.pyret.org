@@ -19,7 +19,8 @@
     "lint": "eslint src",
     "build": "webpack && make -j3 web && make web-local",
     "mocha": "mocha",
-    "start": "supervisor --poll-interval 700 --watch src/run.js,src/server.js src/run.js"
+    "start": "supervisor --poll-interval 700 --watch src/run.js,src/server.js src/run.js",
+    "heroku-postbuild": "make deploy-cpo-main && yarn build"
   },
   "dependencies": {
     "@popperjs/core": "^2.9.2",

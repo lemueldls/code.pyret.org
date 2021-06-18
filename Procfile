@@ -1,1 +1,1 @@
-web: make deploy-cpo-main && node src/run
+web: node src/run
