@@ -91,9 +91,6 @@
     "webpack": "^5.39.1",
     "webpack-cli": "^4.7.2"
   },
-  "resolutions": {
-    "caniuse-lite": "latest"
-  },
   "homepage": "https://github.com/lemueldls/code.pyret.org#readme",
   "repository": "git+https://github.com/lemueldls/code.pyret.org.git",
   "bugs": {
