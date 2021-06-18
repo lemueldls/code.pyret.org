@@ -7,34 +7,34 @@
  * The most recently authenticated version of the
  * wrapped Google API
  */
-var gwrap = window.gwrap = {
+ var gwrap = window.gwrap = {
   // Initialize to a dummy method which loads the wrapper
-  load: function(parameters) {
-    if (!parameters || !parameters.reauth || (parameters.reauth.immediate === undefined)) {
-      throw new Error("Google API Wrapper not yet initialized")
+  load: function(params) {
+    if (!params || !params.reauth || (params.reauth.immediate === undefined)) {
+      throw new Error("Google API Wrapper not yet initialized");
     }
-    var returnValue = Q.defer()
-    loadAPIWrapper(parameters.reauth.immediate)
+    var ret = Q.defer();
+    loadAPIWrapper(params.reauth.immediate)
       .then(function(gw) {
         // Shallow copy
-        var copy = $.extend({}, parameters)
-        delete copy.reauth
+        var copy = $.extend({}, params);
+        delete copy.reauth;
         gw.load(copy)
           .then(function(loaded) {
-            loaded.auth = gw.auth // NOTE(joe): hmmm
-            loaded.hasAuth = function() { return gw.auth !== null }
-            returnValue.resolve(loaded)
-          })
+            loaded.auth = gw.auth; // NOTE(joe): hmmm
+            loaded.hasAuth = function() { return gw.auth !== null; }
+            ret.resolve(loaded);
+          });
       })
-      .fail(function(error) {
-        returnValue.reject(error) 
-      })
-    return returnValue.promise
+      .fail(function(err) {
+        ret.reject(err); 
+      });
+    return ret.promise;
   },
   request: function() {
-    throw new Error("Google API Wrapper not yet initialized")
+    throw new Error("Google API Wrapper not yet initialized");
   }
-}
+};
 
 /**
  * Reauthenticates the current session.
@@ -43,37 +43,37 @@ var gwrap = window.gwrap = {
  * @returns A promise which will resolve following the re-authentication.
  */
 function reauth(immediate) {
-  var d = Q.defer()
+  var d = Q.defer();
   if (!immediate) {
     // Need to do a login to get a cookie for this user; do it in a popup
-    var w = window.open("/login?redirect=" + encodeURIComponent("/close.html"))
+    var w = window.open("/login?redirect=" + encodeURIComponent("/close.html"));
     window.addEventListener('message', function(e) {
       // e.domain appears to not be defined in Firefox
       if ((e.domain || e.origin) === document.location.origin) {
-        d.resolve(reauth(true))
+        d.resolve(reauth(true));
       } else {
-        d.resolve(null)
+        d.resolve(null);
       }
-    })
+    });
   } else {
     // The user is logged in, but needs an access token from our server
-    var newToken = $.ajax("/getAccessToken", { method: "get", datatype: "json" })
+    var newToken = $.ajax("/getAccessToken", { method: "get", datatype: "json" });
     newToken.then(function(t) {
-      gapi.auth.setToken({ access_token: t.access_token })
-      logger.log('login', {user_id: t.user_id})
-      d.resolve({ user_id: t.user_id, access_token: t.access_token })
-    })
+      gapi.auth.setToken({ access_token: t.access_token });
+      logger.log('login', {user_id: t.user_id});
+      d.resolve({ user_id: t.user_id, access_token: t.access_token });
+    });
     newToken.fail(function(t) {
-      d.resolve(null)
-    })
+      d.resolve(null);
+    });
   }
-  return d.promise
+  return d.promise;
 }
-window.reauth = reauth
+window.reauth = reauth;
 
 // GAPI Client APIs whose methods have been wrapped with calls to gQ
 // (This is kept in the global state to avoid unneeded reloading)
-var _GWRAP_APIS = {}
+var _GWRAP_APIS = {};
 
 /**
  * Base module for interfacing with Google APIs.
@@ -95,12 +95,12 @@ function loadAPIWrapper(immediate) {
   function assertDefined(v) {
     if (window[v] === undefined) {
       throw new Error("Cannot initialize wrapper! " +
-                      "Missing required definition: " + v)
+                      "Missing required definition: " + v);
     }
   }
-  assertDefined('gapi')
-  assertDefined('apiKey')
-  assertDefined('Q')
+  assertDefined('gapi');
+  assertDefined('apiKey');
+  assertDefined('Q');
   // Sanity check passed.
 
   // Custom error type definitions
@@ -111,20 +111,20 @@ function loadAPIWrapper(immediate) {
    * @param [message] - The error message for this error
    */
   function GoogleAPIError(message) {
-    Error.captureStackTrace(this, this.constructor)
-    this.name = this.constructor.name
-    this.message = message || ""
+    Error.captureStackTrace(this, this.constructor);
+    this.name = this.constructor.name;
+    this.message = message || "";
   }
 
-  GoogleAPIError.prototype = Object.create(Error.prototype)
-  GoogleAPIError.prototype.name = "GoogleAPIError"
-  GoogleAPIError.prototype.constructor = GoogleAPIError
+  GoogleAPIError.prototype = Object.create(Error.prototype);
+  GoogleAPIError.prototype.name = "GoogleAPIError";
+  GoogleAPIError.prototype.constructor = GoogleAPIError;
 
   /**
    * Alias for {@link GoogleAPIError}.
    * @see GoogleAPIError
    */
-  var GAPIError = GoogleAPIError
+  var GAPIError = GoogleAPIError;
 
   /**
    * Creates a new Authentication Error. These are caused by
@@ -134,11 +134,11 @@ function loadAPIWrapper(immediate) {
    * @param [message] - The error message for this error
    */
   function AuthenticationError(message) {
-    this.message = message || ""
+    this.message = message || "";
   }
-  AuthenticationError.prototype = Object.create(GoogleAPIError.prototype)
-  AuthenticationError.prototype.name = "AuthenticationError"
-  AuthenticationError.prototype.constructor = AuthenticationError
+  AuthenticationError.prototype = Object.create(GoogleAPIError.prototype);
+  AuthenticationError.prototype.name = "AuthenticationError";
+  AuthenticationError.prototype.constructor = AuthenticationError;
 
   /**
    * Creates a new API Response Error. These are caused by invalid/error
@@ -148,14 +148,14 @@ function loadAPIWrapper(immediate) {
    * @param [message] - The error message for this error
    */
   function APIResponseError(response) {
-    response = response || {}
-    this.message = response.message || ""
-    this.code = response.code || null
-    this.response = response
+    response = response || {};
+    this.message = response.message || "";
+    this.code = response.code || null;
+    this.response = response;
   }
-  APIResponseError.prototype = Object.create(GoogleAPIError.prototype)
-  APIResponseError.prototype.name = "APIResponseError"
-  APIResponseError.prototype.constructor = APIResponseError
+  APIResponseError.prototype = Object.create(GoogleAPIError.prototype);
+  APIResponseError.prototype.name = "APIResponseError";
+  APIResponseError.prototype.constructor = APIResponseError;
 
   // Function definitions
 
@@ -166,9 +166,9 @@ function loadAPIWrapper(immediate) {
    */
   function refresh(immediate) {
     if (arguments.length > 0) {
-      console.warn("The `immediate` argument to `refresh()` is deprecated.")
+      console.warn("The `immediate` argument to `refresh()` is deprecated.");
     }
-    return reauth(true)
+    return reauth(true);
   }
 
   /**
@@ -182,19 +182,27 @@ function loadAPIWrapper(immediate) {
     function isAuthFailure(result) {
       return result
         && ((result.error && result.error.code && result.error.code === 401)
-            || (result.code && result.code === 401))
+            || (result.code && result.code === 401));
     }
     var retry = f().then(function(result) {
-      return isAuthFailure(result) ? refresh().then(function(authResult) {
-        return !authResult || authResult.error ? { error: { code: 401, message: "Couldn't re-authorize" } } : f()
-      }) : result
-    })
+      if(isAuthFailure(result)) {
+        return refresh().then(function(authResult) {
+          if(!authResult || authResult.error) {
+            return { error: { code: 401, message: "Couldn't re-authorize" } };
+          } else {
+            return f();
+          }
+        });
+      } else {
+        return result;
+      }
+    });
     return retry.then(function(result) {
       if(isAuthFailure(result)) {
-        throw new AuthenticationError("Authentication failure")
+        throw new AuthenticationError("Authentication failure");
       }
-      return result
-    })
+      return result;
+    });
   }
 
   /**
@@ -207,15 +215,15 @@ function loadAPIWrapper(immediate) {
     return p.then(function(result) {
       // Network error
       if (result && (typeof result.code === "number") && (result.code >= 400)) {
-        console.error("40X Error getting Google API response:", result)
-        throw new APIResponseError(result)
+        console.error("40X Error getting Google API response: ", result);
+        throw new APIResponseError(result);
       }
       if (result && result.error) {
-        console.error("Error getting Google API response:", result)
-        throw new APIResponseError(result)
+        console.error("Error getting Google API response: ", result);
+        throw new APIResponseError(result);
       }
-      return result
-    })
+      return result;
+    });
   }
 
   /**
@@ -226,28 +234,28 @@ function loadAPIWrapper(immediate) {
    * @returns {Promise} A promise which resolves to the result of the Google query
    */
   function gQ(makeRequest, skipAuth) {
-    var oldAccess = gapi.auth.getToken()
-    if (skipAuth) { gapi.auth.setToken({ access_token: null }) }
-    var returnValue = failCheck(authCheck(function() {
-      var d = Q.defer()
+    var oldAccess = gapi.auth.getToken();
+    if (skipAuth) { gapi.auth.setToken({ access_token: null }); }
+    var ret = failCheck(authCheck(function() {
+      var d = Q.defer();
       // TODO: This should be migrated to a promise
       makeRequest().execute(function(result) {
-        d.resolve(result)
-      })
-      return d.promise
-    }))
+        d.resolve(result);
+      });
+      return d.promise;
+    }));
     if (skipAuth) {
       // NOTE(joe): see discussion at https://github.com/brownplt/code.pyret.org/issues/255
       // for why (A) we do this before the request completes and (B) the
       // setTimeout here is necessary
       setTimeout(function() {
-        gapi.auth.setToken(oldAccess)
-      })
+        gapi.auth.setToken(oldAccess);
+      });
     }
-    return returnValue
+    return ret;
   }
 
-  var cachedAPIS = []
+  var cachedAPIS = [];
 
   /**
    * Loads the Google API denoted by the given parameters
@@ -256,132 +264,133 @@ function loadAPIWrapper(immediate) {
    * @returns Nothing if `params.callback` is provided, otherwise a promise
    *          which resolves to the loaded API/APIs.
    */
-  function loadAPI(parameters) {
-    if (!parameters) {
-      throw new GoogleAPIError("Missing API loading parameters")
+  function loadAPI(params) {
+    if (!params) {
+      throw new GoogleAPIError("Missing API loading parameters");
     }
-    if (parameters.reauth) {
-      if (parameters.reauth.immediate === undefined) {
+    if (params.reauth) {
+      if (params.reauth.immediate === undefined) {
         throw new GoogleAPIError("Missing required field to load(): "
-                                 + "params.reauth.immediate")
+                                 + "params.reauth.immediate");
       }
-      var reloaded = Q.defer()
-      loadAPIWrapper(parameters.reauth.immediate)
+      var reloaded = Q.defer();
+      loadAPIWrapper(params.reauth.immediate)
         .then(function(gw) {
           // Shallow copy
-          var copy = $.extend({}, parameters)
-          delete copy.reauth
+          var copy = $.extend({}, params);
+          delete copy.reauth;
           gw.load(copy)
             .then(function(loaded) {
-              reloaded.resolve(loaded)
-            })
-        })
-      return reloaded.promise
+              reloaded.resolve(loaded);
+            });
+        });
+      return reloaded.promise;
     }
-    for (var cached of cachedAPIS) {
-      if (parameters.name && (cached.query.name === parameters.name)) {
-        return cached.api
-      } else if (parameters.url && (cached.query.url === parameters.url)){
-        return cached.api
+    for (var i = 0; i < cachedAPIS.length; ++i) {
+      var cached = cachedAPIS[i];
+      if (params.name && (cached.query.name === params.name)) {
+        return cached.api;
+      } else if (params.url && (cached.query.url === params.url)){
+        return cached.api;
       }
     }
-    var preKeys = Object.keys(gapi.client)
+    var preKeys = Object.keys(gapi.client);
 
     function processKey(key) {
-      function processObject(object, destination) {
-        for (const key of Object.keys(object)) {
-          if (typeof(object[key]) === "object") {
-            destination[key] = {}
-            processObject(object[key], destination[key])
-          } else if (typeof(object[key]) === "function") {
+      function processObject(obj, dest) {
+        Object.keys(obj).forEach(function(key) {
+          if (typeof(obj[key]) === "object") {
+            dest[key] = {};
+            processObject(obj[key], dest[key]);
+          } else if (typeof(obj[key]) === "function") {
             // Use one argument, since it seems that's all that's
             // used, and there's no `Function.prototype.apply` equivalent
             // that doesn't change the function's context
-            var original = object[key]
-            destination[key] = (function(arguments_, skipAuth) {
-              return gQ(function() { return original(arguments_) }, skipAuth)
-            })
+            var original = obj[key];
+            dest[key] = (function(args, skipAuth) {
+              return gQ(function() { return original(args); }, skipAuth);
+            });
           } else {
-            destination[key] = object[key]
+            dest[key] = obj[key];
           }
-        }
+        });
       }
 
       if (key in _GWRAP_APIS) {
         // Do nothing
-        return _GWRAP_APIS[key]
+        return _GWRAP_APIS[key];
       }
-      var api = gapi.client[key]
-      _GWRAP_APIS[key] = {}
+      var api = gapi.client[key];
+      _GWRAP_APIS[key] = {};
       // NOTE(joe): hack as I'm testing on MS Edge
       if(api !== undefined) {
-        processObject(api, _GWRAP_APIS[key])
+        processObject(api, _GWRAP_APIS[key]);
       }
-      return _GWRAP_APIS[key]
+      return _GWRAP_APIS[key];
     }
 
     function processDelta() {
       var newKeys = Object.keys(gapi.client)
-        .filter(function(k) {return (!preKeys.includes(k))})
-      var returnValue_
+            .filter(function(k) {return (preKeys.indexOf(k) === -1);});
+      var ret;
       if (newKeys.length > 1) {
-        returnValue_ = newKeys.map(processKey)
-      } else if (parameters.name && newKeys.length === 0) {
+        ret = newKeys.map(processKey);
+      } else if (params.name && newKeys.length === 0) {
         // Hack to make drive-loading happy on login
-        if (gapi.client[parameters.name]) {
-          returnValue_ = processKey(parameters.name)
+        if (gapi.client[params.name]) {
+          ret = processKey(params.name);
         }
       } else {
-        returnValue_ = processKey(newKeys[0])
+        ret = processKey(newKeys[0]);
       }
-      if (!returnValue_) {
-        console.warn("loadAPI: Nothing to return!")
+      if (!ret) {
+        console.warn("loadAPI: Nothing to return!");
       } else {
-        cachedAPIS.push({query: parameters, api: returnValue_})
+        cachedAPIS.push({query: params, api: ret});
       }
-      return returnValue_
+      return ret;
     }
 
-    var name = parameters.name || parameters.url
-    var version = parameters.version
+    var name = params.name || params.url;
+    var version = params.version;
 
-    if (parameters.callback) {
+    if (params.callback) {
       gapi.client.load(name, version, function() {
-        parameters.callback(processDelta())
-      })
-      return null
+        params.callback(processDelta());
+      });
+      return null;
     } else {
-      var returnValue = Q.defer()
+      var ret = Q.defer();
       gapi.client.load(name, version, function() {
-        returnValue.resolve(processDelta())
-      })
-      return returnValue.promise
+        ret.resolve(processDelta());
+      });
+      return ret.promise;
     }
   }
 
-  var initialAuth = reauth(immediate)
+  var initialAuth = reauth(immediate);
   return initialAuth.then(function(auth) {
     /**
      * Creates the API Wrapping module to export
      */
     function makeWrapped() {
-      this.GoogleAPIError = GoogleAPIError
-      this.GAPIError = GAPIError
-      this.AuthenticationError = AuthenticationError
-      this.APIResponseError = APIResponseError
-      this.load = loadAPI
-      this.withAuth = function(f) {return failCheck(authCheck(f))}
-      this.request = (function(parameters, skipAuth) {
-        return gQ(function() { return gapi.client.request(parameters) }, skipAuth)
-      })
-      this.auth = auth
-      this.hasAuth = function() { return auth !== null }
+      this.GoogleAPIError = GoogleAPIError;
+      this.GAPIError = GAPIError;
+      this.AuthenticationError = AuthenticationError;
+      this.APIResponseError = APIResponseError;
+      this.load = loadAPI;
+      this.withAuth = function(f) {return failCheck(authCheck(f));};
+      this.request = (function(params, skipAuth) {
+        return gQ(function() { return gapi.client.request(params); }, skipAuth);
+      });
+      this.auth = auth;
+      this.hasAuth = function() { return auth !== null; };
     }
 
-    makeWrapped.prototype = _GWRAP_APIS
+    makeWrapped.prototype = _GWRAP_APIS;
 
-    gwrap = new makeWrapped()
-    return gwrap
-  })
+    gwrap = new makeWrapped();
+    return gwrap;
+  });
 
 }

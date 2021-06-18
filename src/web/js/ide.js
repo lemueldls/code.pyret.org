@@ -8,7 +8,7 @@ import CodeMirror from "codemirror";
 // TODO: don't export CodeMirror on window once
 // if we can help it
 window.CodeMirror = CodeMirror;
-import("script!pyret-codemirror-mode/mode/pyret");
+require("script!pyret-codemirror-mode/mode/pyret");
 
 function loadScriptUrl(url) {
   var scriptTag = document.createElement("script");
@@ -476,7 +476,7 @@ init({
   runtimeApiLoader() {
     return new Promise((resolve, reject) => {
       // this is needed by pyret I guess.
-      import("script!requirejs/require.js");
+      require("script!requirejs/require.js");
       window.define("seedrandom", [], function () {
         return seedrandom;
       });

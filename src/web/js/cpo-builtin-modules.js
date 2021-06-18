@@ -18,16 +18,24 @@ define("cpo/cpo-builtin-modules", ["pyret-base/js/type-util"], function(t) {
       return RUNTIME.makeObject({
         "get-raw-dependencies":
             F(function() {
-              return m.requires ? m.requires.map(function(m) {
-                if(!m["import-type"]) {
-                  m["import-type"] = "dependency"
-                }
-                return RUNTIME.makeObject(m)
-              }) : []
+              if(m.requires) {
+                return m.requires.map(function(m) {
+                  if(!m["import-type"]) {
+                    m["import-type"] = "dependency"
+                  }
+                  return RUNTIME.makeObject(m)
+                })
+              } else {
+                return []
+              }
             }),
         "get-raw-native-modules":
             F(function() {
-              return Array.isArray(m.nativeRequires) ? m.nativeRequires.map(RUNTIME.makeString) : []
+              if(Array.isArray(m.nativeRequires)) {
+                return m.nativeRequires.map(RUNTIME.makeString)
+              } else {
+                return []
+              }
             }),
         "get-raw-datatype-provides":
             F(function() {
@@ -44,7 +52,7 @@ define("cpo/cpo-builtin-modules", ["pyret-base/js/type-util"], function(t) {
                   })
                 }
                 else {
-                  throw new TypeError("Bad datatype specification: " + String(m.provides.datatypes))
+                  throw new Error("Bad datatype specification: " + String(m.provides.datatypes))
                 }
               }
               return []
