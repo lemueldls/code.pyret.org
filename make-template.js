@@ -1,10 +1,9 @@
 import mustache from "mustache";
 import file from "node:fs";
 
-import dotenv from "dotenv";
-// Silent suppresses "missing .env file" warning,
-// which we want since deploys don't have that file
-dotenv.config();
+import dotenv from "dotenv-extended";
+
+dotenv.load();
 
 var config = process.env;
 
