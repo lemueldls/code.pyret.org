@@ -1,11 +1,22 @@
-var tester = require("../test-util/util.js");
+import tester from "../test-util/util.js";
 
-describe("Running Google Sheets programs", function() {
+describe("Running Google Sheets programs", function () {
   beforeEach(tester.setup);
   afterEach(tester.teardown);
 
   var sheetsTestsBase = "./test-util/pyret-programs/sheets/";
-  tester.doForEachPyretFile(it, "sheets", sheetsTestsBase, function(programText, testObj) {
-    tester.runAndCheckAllTestsPassed(programText, testObj.browser, testObj.test, 900000);
-  }, 900000);
+  tester.doForEachPyretFile(
+    it,
+    "sheets",
+    sheetsTestsBase,
+    function (programText, testObject) {
+      tester.runAndCheckAllTestsPassed(
+        programText,
+        testObject.browser,
+        testObject.test,
+        900_000
+      );
+    },
+    900_000
+  );
 });

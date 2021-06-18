@@ -1,14 +1,26 @@
-var tester = require("../test-util/util.js");
+import tester from "../test-util/util.js";
 
-describe("Running Image programs", function() {
+describe("Running Image programs", function () {
   beforeEach(tester.setup);
   afterEach(tester.teardown);
 
   var imageTestsBase = "./test-util/pyret-programs/images/";
-  tester.doForEachPyretFile(it, "image", imageTestsBase, function(programText, testObj) {
-    programText = programText.replace("BASE_URL", "\"" + process.env["BASE_URL"] + "\"");
-    tester.runAndCheckAllTestsPassed(programText, testObj.browser, testObj.test, 900000);
-  }, 900000);
-
+  tester.doForEachPyretFile(
+    it,
+    "image",
+    imageTestsBase,
+    function (programText, testObject) {
+      programText = programText.replace(
+        "BASE_URL",
+        '"' + process.env["BASE_URL"] + '"'
+      );
+      tester.runAndCheckAllTestsPassed(
+        programText,
+        testObject.browser,
+        testObject.test,
+        900_000
+      );
+    },
+    900_000
+  );
 });
-

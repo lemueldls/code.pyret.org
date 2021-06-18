@@ -1,1 +1,1 @@
-define([], function() { return { fs: "stub" }});
+define([], function() { return { fs: "stub" }})

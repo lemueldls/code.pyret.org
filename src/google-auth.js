@@ -1,73 +1,78 @@
-var gapi = require('googleapis').google;
-var jwt = require('jwt-simple');
+import { google as gapi } from "googleapis";
+import jwt from "jwt-simple";
 var OAuth2 = gapi.auth.OAuth2;
 
 // Relevant README/docs at https://github.com/google/google-api-nodejs-client/
 
 function makeAuth(config) {
-  var OAUTH_SCOPES = ["email",
-                      "https://www.googleapis.com/auth/spreadsheets",
-                      // The `drive` scope allows us to open files
-                      // (particularly spreadsheets) made outside of
-                      // the Pyret ecosystem.
-                      "https://www.googleapis.com/auth/drive",
-                      "https://www.googleapis.com/auth/drive.file",
-                      "https://www.googleapis.com/auth/drive.install",
-                      "https://www.googleapis.com/auth/drive.photos.readonly",
-                      "https://www.googleapis.com/auth/photos"];
-  var oauth2Client =
-      new OAuth2(
-          config.google.clientId,
-          config.google.clientSecret,
-          config.baseUrl + config.google.redirect
-        );
+  var OAUTH_SCOPES = [
+    "email",
+    "https://www.googleapis.com/auth/spreadsheets",
+    // The `drive` scope allows us to open files
+    // (particularly spreadsheets) made outside of
+    // the Pyret ecosystem.
+    "https://www.googleapis.com/auth/drive",
+    "https://www.googleapis.com/auth/drive.file",
+    "https://www.googleapis.com/auth/drive.install",
+    "https://www.googleapis.com/auth/drive.photos.readonly",
+    "https://www.googleapis.com/auth/photos",
+  ];
+  var oauth2Client = new OAuth2(
+    config.google.clientId,
+    config.google.clientSecret,
+    config.baseUrl + config.google.redirect
+  );
 
   return {
-    refreshAccess: function(refreshToken, callback) {
-      var oauth2Client =
-          new OAuth2(
-              config.google.clientId,
-              config.google.clientSecret,
-              config.baseUrl + config.google.redirect
-            );
+    refreshAccess: function (refreshToken, callback) {
+      var oauth2Client = new OAuth2(
+        config.google.clientId,
+        config.google.clientSecret,
+        config.baseUrl + config.google.redirect
+      );
       oauth2Client.credentials = { refresh_token: refreshToken };
-      oauth2Client.refreshAccessToken(function(err, tokens) {
-        if(err !== null) { callback(err, null); return; }
+      oauth2Client.refreshAccessToken(function (err, tokens) {
+        if (err !== null) {
+          callback(err, null);
+          return;
+        }
         callback(null, tokens.access_token);
       });
     },
-    getAuthUrl: function(afterUrl) {
-        return oauth2Client.generateAuthUrl({
+    getAuthUrl: function (afterUrl) {
+      return oauth2Client.generateAuthUrl({
         // Offline lets us handle refreshing access on our own (rather than
         // popping up a dialog every half hour)
-        access_type: 'offline',
+        access_type: "offline",
         // Skip permission confirmation if the user has confirmed with us before
-        approval_prompt: 'auto',
+        approval_prompt: "auto",
         // NOTE(joe): We do not use the drive scope on the server, but we ask
         // for it so that we don't have to do another popup on the client.
         // #notpola
-        scope: OAUTH_SCOPES.join(' '),
-        state: afterUrl
+        scope: OAUTH_SCOPES.join(" "),
+        state: afterUrl,
       });
     },
-    serveRedirect: function(req, callback) {
+    serveRedirect: function (req, callback) {
       var authCode = req.param("code");
-      var oauth2Client =
-          new OAuth2(
-              config.google.clientId,
-              config.google.clientSecret,
-              config.baseUrl + config.google.redirect
-            );
-      oauth2Client.getToken(authCode, function(err, tokens) {
-        if(err !== null) {
+      var oauth2Client = new OAuth2(
+        config.google.clientId,
+        config.google.clientSecret,
+        config.baseUrl + config.google.redirect
+      );
+      oauth2Client.getToken(authCode, function (err, tokens) {
+        if (err !== null) {
           console.error("Error in Google login: ", err);
-          callback(err, null); return;
+          callback(err, null);
+          return;
         }
-        if(!(typeof tokens.id_token === "string")) {
-          callback(new Error("No identity information provided"), null); return;
+        if (!(typeof tokens.id_token === "string")) {
+          callback(new Error("No identity information provided"), null);
+          return;
         }
-        if(!(typeof tokens.access_token === "string")) {
-          callback(new Error("No access information provided"), null); return;
+        if (!(typeof tokens.access_token === "string")) {
+          callback(new Error("No access information provided"), null);
+          return;
         }
         // NOTE(joe): These few lines make security assumptions and you should
         // edit with care.  I wrote this when Google was deprecating one OAuth
@@ -99,12 +104,16 @@ function makeAuth(config) {
         // servers to get the correct public key of the day to validate these
         // tokens cryptographically.
         var decodedId = jwt.decode(tokens.id_token, {}, true);
-        callback(null, { googleId: decodedId["sub"], access: tokens.access_token, refresh: tokens.refresh_token });
+        callback(null, {
+          googleId: decodedId["sub"],
+          access: tokens.access_token,
+          refresh: tokens.refresh_token,
+        });
       });
-    }
+    },
   };
 }
 
-module.exports = {
-  makeAuth: makeAuth
+export default {
+  makeAuth,
 };

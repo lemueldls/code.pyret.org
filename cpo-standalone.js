@@ -1,4 +1,4 @@
-requirejs(["pyret-base/js/runtime", "pyret-base/js/post-load-hooks", "pyret-base/js/exn-stack-parser", "program", "cpo/cpo-builtin-modules"], function(runtimeLib, loadHooksLib, stackLib, program, cpoBuiltinModules) {
+requirejs(["pyret-base/js/runtime", "pyret-base/js/post-load-hooks", "pyret-base/js/exn-stack-parser", "program", "cpo/cpo-builtin-modules"], function(runtimeLibrary, loadHooksLibrary, stackLibrary, program, cpoBuiltinModules) {
 
   var staticModules = program.staticModules;
   var depMap = program.depMap;
@@ -13,7 +13,7 @@ requirejs(["pyret-base/js/runtime", "pyret-base/js/post-load-hooks", "pyret-base
 
   cpoBuiltinModules.setStaticModules(program.staticModules);
 
-  var runtime = runtimeLib.makeRuntime({
+  var runtime = runtimeLibrary.makeRuntime({
     stdout: function(s) { console.log(s); },
     stderr: function(s) { console.error(s); }
   });
@@ -43,16 +43,11 @@ requirejs(["pyret-base/js/runtime", "pyret-base/js/post-load-hooks", "pyret-base
   if(window.navigator && window.navigator.userAgent) {
     ua = window.navigator.userAgent;
   }
-  if(ua.indexOf("Firefox") !== -1) {
-    runtime.INITIAL_GAS = FIREFOX_GAS;
-  }
-  else {
-    runtime.INITIAL_GAS = OTHER_GAS;
-  }
+  runtime.INITIAL_GAS = ua.includes("Firefox") ? FIREFOX_GAS : OTHER_GAS;
 
   var gf = runtime.getField;
 
-  var postLoadHooks = loadHooksLib.makeDefaultPostLoadHooks(runtime, {main: main, checkAll: true});
+  var postLoadHooks = loadHooksLibrary.makeDefaultPostLoadHooks(runtime, {main: main, checkAll: true});
   postLoadHooks["builtin://cpo-builtins"] = function(_) {
     // NOTE(joe): At this point, all the builtin modules are for sure loaded
     // (like image, world, etc)
@@ -64,11 +59,11 @@ requirejs(["pyret-base/js/runtime", "pyret-base/js/post-load-hooks", "pyret-base
     cpoBuiltinModules.setRealm(realm);
   };
   postLoadHooks[main] = function(answer) {
-    var checkerLib = runtime.modules["builtin://checker"];
-    var checker = runtime.getField(runtime.getField(checkerLib, "provide-plus-types"), "values");
-    var getStack = function(err) {
-      console.error("The error is: ", err);
-      var locArray = err.val.pyretStack.map(runtime.makeSrcloc);
+    var checkerLibrary = runtime.modules["builtin://checker"];
+    var checker = runtime.getField(runtime.getField(checkerLibrary, "provide-plus-types"), "values");
+    var getStack = function(error) {
+      console.error("The error is:", error);
+      var locArray = error.val.pyretStack.map(runtime.makeSrcloc);
       var locList = runtime.ffi.makeList(locArray);
       return locList;
     };
@@ -90,19 +85,15 @@ requirejs(["pyret-base/js/runtime", "pyret-base/js/post-load-hooks", "pyret-base
 
   function renderErrorMessage(execRt, res) {
     if (execRt.isPyretException(res.exn)) {
-      var rendererrorMod = execRt.modules["builtin://render-error-display"];
-      var rendererror = execRt.getField(rendererrorMod, "provide-plus-types");
+      var rendererrorModule = execRt.modules["builtin://render-error-display"];
+      var rendererror = execRt.getField(rendererrorModule, "provide-plus-types");
       var gf = execRt.getField;
       var exnStack = res.exn.stack;
-      res.exn.pyretStack = stackLib.convertExceptionToPyretStackTrace(res.exn, realm);
+      res.exn.pyretStack = stackLibrary.convertExceptionToPyretStackTrace(res.exn, realm);
       var pyretStack = res.exn.pyretStack;
       execRt.runThunk(
         function() {
-          if (execRt.isPyretVal(res.exn.exn) && execRt.hasField(res.exn.exn, "render-reason")) {
-            return execRt.getColonField(res.exn.exn, "render-reason").full_meth(res.exn.exn);
-          } else {
-            return execRt.ffi.edEmbed(res.exn.exn);
-          }
+          return execRt.isPyretVal(res.exn.exn) && execRt.hasField(res.exn.exn, "render-reason") ? execRt.getColonField(res.exn.exn, "render-reason").full_meth(res.exn.exn) : execRt.ffi.edEmbed(res.exn.exn);
         },
         function (reasonResult) {
           if (execRt.isFailureResult(reasonResult)) {
@@ -140,7 +131,7 @@ requirejs(["pyret-base/js/runtime", "pyret-base/js/post-load-hooks", "pyret-base
       console.error("Stack trace:\n", res.exn.stack);
       // process.exit(EXIT_ERROR_JS);
     } else {
-      console.error("Unknown error result: ", res.exn);
+      console.error("Unknown error result:", res.exn);
       // process.exit(EXIT_ERROR_UNKNOWN);
     }
   }
@@ -149,8 +140,8 @@ requirejs(["pyret-base/js/runtime", "pyret-base/js/post-load-hooks", "pyret-base
     if(runtime.isSuccessResult(result)) {
       // NOTE(joe): This forces the loading of all the built-in compiler libs
       var interactionsReady = repl.restartInteractions("", { typeCheck: false, checkAll: false });
-      interactionsReady.fail(function(err) {
-        console.error("Couldn't start REPL: ", err);
+      interactionsReady.fail(function(error) {
+        console.error("Couldn't start REPL:", error);
       });
       interactionsReady.then(function(result) {
         $("#runButton").attr("disabled", false);
@@ -162,7 +153,7 @@ requirejs(["pyret-base/js/runtime", "pyret-base/js/post-load-hooks", "pyret-base
       });
     }
     else {
-      console.error("The run ended in error: ", result);
+      console.error("The run ended in error:", result);
       renderErrorMessage(runtime, result);
       console.error(result.exn.stack);
     }

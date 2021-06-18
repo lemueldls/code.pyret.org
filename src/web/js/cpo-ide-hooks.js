@@ -36,21 +36,21 @@
   ],
   provides: {},
   theModule: function(runtime, namespace, uri,
-                      compileLib, compileStructs, pyRepl, cpo,
-                      runtimeLib, loadLib, cpoBuiltins, parsePyret,
-                      cpoModules, jsnums
+    compileLibrary, compileStructs, pyRepl, cpo,
+    runtimeLibrary, loadLibrary, cpoBuiltins, parsePyret,
+    cpoModules, jsnums
   ) {
     window.CPOIDEHooks = {
       runtime: runtime,
       cpo: cpo,
       parsePyret: parsePyret,
-      loadLib: loadLib,
-      runtimeLib: runtimeLib,
+      loadLib: loadLibrary,
+      runtimeLib: runtimeLibrary,
       compileStructs: compileStructs,
-      compileLib: compileLib,
+      compileLib: compileLibrary,
       cpoModules: cpoModules,
       jsnums: jsnums
-    };
-    return runtime.makeModuleReturn({}, {});
+    }
+    return runtime.makeModuleReturn({}, {})
   }
 })

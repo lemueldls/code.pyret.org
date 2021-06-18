@@ -1,18 +1,18 @@
-var Q = require("q");
-var redis = require("redis");
-var url = require("url");
-var storage = require("./storage/redis-store.js");
-var server = require("./server.js");
-var git = require("git-rev-sync");
+import Q from "q";
+import redis from "redis";
+import url from "node:url";
+import storage from "./storage/redis-store.js";
+import server from "./server.js";
+// import git from "git-rev-sync";
 Q.longStackSupport = true;
 
-const dotenv = require("dotenv-extended");
+import dotenv from "dotenv-extended";
 
 dotenv.load();
 
-var redisParam = process.env["REDISCLOUD_URL"];
-if (redisParam !== "") {
-  var redisURL = url.parse(redisParam);
+var redisParameter = process.env["REDISCLOUD_URL"];
+if (redisParameter !== "") {
+  var redisURL = url.parse(redisParameter);
   var client = redis.createClient(redisURL.port, redisURL.hostname, {
     no_ready_check: true,
   });
@@ -23,14 +23,14 @@ if (redisParam !== "") {
   var client = null;
 }
 
-var res = Q.fcall(function (db) {
+var res = Q.fcall(function (database) {
   server.start(
     {
       development: process.env["NODE_ENV"] !== "production",
       baseUrl: process.env["BASE_URL"],
       logURL: process.env["LOG_URL"],
-      gitRev: process.env["GIT_REV"] || git.short(),
-      gitBranch: process.env["GIT_BRANCH"] || git.branch(),
+      gitRev: process.env["GIT_REV"], // || git.short(),
+      gitBranch: process.env["GIT_BRANCH"], // || git.branch(),
       port: process.env["PORT"],
       sessionSecret: process.env["SESSION_SECRET"],
       db: storage.makeStorage(client),
@@ -48,6 +48,6 @@ var res = Q.fcall(function (db) {
     }
   );
 });
-res.fail(function (err) {
-  console.error("Server did not start: ", err);
+res.fail(function (error) {
+  console.error("Server did not start:", error);
 });

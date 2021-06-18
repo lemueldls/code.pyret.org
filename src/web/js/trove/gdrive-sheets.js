@@ -20,8 +20,8 @@
   },
   theModule: function(runtime, namespace, uri, table, list, VSlib, t){
     var List = function(thing) { 
-      return t.tyapp(t.libName("lists", "List"), [thing]);
-    };
+      return t.tyapp(t.libName("lists", "List"), [thing])
+    }
     // Tables not yet in the Typechecker, AFAIK
     /*
     var TableT = t.any;
@@ -44,81 +44,81 @@
       datatypes: {}
     };*/
     
-    var F = runtime.makeFunction;
-    var O = runtime.makeObject;
-    var VS = runtime.getField(VSlib, "values");
+    var F = runtime.makeFunction
+    var O = runtime.makeObject
+    var VS = runtime.getField(VSlib, "values")
 
-    var None = runtime.ffi.makeNone;
-    var Some = runtime.ffi.makeSome;
+    var None = runtime.ffi.makeNone
+    var Some = runtime.ffi.makeSome
 
-    var SHEET_TYPES;
+    var SHEET_TYPES
 
-    function applyBrand(brand, val) {
-      return runtime.getField(brand, "brand").app(val);
+    function applyBrand(brand, value) {
+      return runtime.getField(brand, "brand").app(value)
     }
 
-    function hasBrand(brand, val) {
-      return runtime.getField(brand, "test").app(val);
+    function hasBrand(brand, value) {
+      return runtime.getField(brand, "test").app(value)
     }
 
-    var brandWS = runtime.namedBrander("sheet", ["worksheet: worksheet brander"]);
-    var brandSS = runtime.namedBrander("spreadsheet", ["spreadsheet: spreadsheet brander"]);
+    var brandWS = runtime.namedBrander("sheet", ["worksheet: worksheet brander"])
+    var brandSS = runtime.namedBrander("spreadsheet", ["spreadsheet: spreadsheet brander"])
 
-    function isSpreadsheet(val) {
-      return hasBrand(brandSS, val);
+    function isSpreadsheet(value) {
+      return hasBrand(brandSS, value)
     }
 
-    function isWorksheet(val) {
-      return hasBrand(brandWS, val);
+    function isWorksheet(value) {
+      return hasBrand(brandWS, value)
     }
 
-    var checkSpreadsheet = runtime.makeCheckType(isSpreadsheet, "Spreadsheet");
-    var checkWorksheet = runtime.makeCheckType(isWorksheet, "Worksheet");
+    var checkSpreadsheet = runtime.makeCheckType(isSpreadsheet, "Spreadsheet")
+    var checkWorksheet = runtime.makeCheckType(isWorksheet, "Worksheet")
 
     function loadWorksheet(loader, buildFun) {
-      buildFun = buildFun || worksheetToTable;
+      buildFun = buildFun || worksheetToTable
       function doLoadWorksheet() {
         return runtime.pauseStack(function(resumer) {
-          function handleError(err) {
-            if (runtime.isPyretException(err)) {
-              resumer.error(err);
+          function handleError(error) {
+            if (runtime.isPyretException(error)) {
+              resumer.error(error)
             } else {
-              if (err && err.message) err = err.message;
-              resumer.error(runtime.ffi.makeMessageException(err));
+              if (error && error.message) error = error.message
+              resumer.error(runtime.ffi.makeMessageException(error))
             }
           }
           try {
-            var p = buildFun(loader());
+            var p = buildFun(loader())
             p.then(function(thunk) {
-              resumer.resume(thunk);
-            });
-            p.catch(handleError);
-          } catch (err) {
-            handleError(err);
+              resumer.resume(thunk)
+            })
+            p.catch(handleError)
+          } catch (error) {
+            handleError(error)
           }
-        });
+        })
       }
       return runtime.safeCall(doLoadWorksheet, function(thunk) {
-        return thunk();
-      }, "gdrive-sheets:loadWorksheet:doLoadWorksheet");
+        return thunk()
+      }, "gdrive-sheets:loadWorksheet:doLoadWorksheet")
     }
 
     function deleteWorksheet(deleter) {
       return runtime.pauseStack(function(resumer) {
-        function handleError(err) {
-          if (runtime.isPyretException(err)) {
-            resumer.error(err);
+        function handleError(error) {
+          if (runtime.isPyretException(error)) {
+            resumer.error(error)
           } else {
-            if (err && err.message) err = err.message;
-            resumer.error(runtime.ffi.makeMessageException(err));
+            if (error && error.message) error = error.message
+            resumer.error(runtime.ffi.makeMessageException(error))
           }
         }
         try {
           deleter().then(function(_) {
-            resumer.resume(runtime.makeNothing());
-          }).catch(handleError);
-        } catch (err) {
-          handleError(err);
+            resumer.resume(runtime.makeNothing())
+          }).catch(handleError)
+        } catch (error) {
+          handleError(error)
         }
       })
     }
@@ -126,140 +126,136 @@
     function addWorksheet(adder) {
       function doAdd() {
         return runtime.pauseStack(function(resumer) {
-          function handleError(err) {
-            if (runtime.isPyretException(err)) {
-              resumer.error(err);
+          function handleError(error) {
+            if (runtime.isPyretException(error)) {
+              resumer.error(error)
             } else {
-              if (err && err.message) err = err.message;
-              resumer.error(runtime.ffi.makeMessageException(err));
+              if (error && error.message) error = error.message
+              resumer.error(runtime.ffi.makeMessageException(error))
             }
           }
           try {
             adder().then(worksheetToTable).then(function(thunk) {
-              resumer.resume(thunk);
-            }).catch(handleError);
-          } catch (err) {
-            handleError(err);
+              resumer.resume(thunk)
+            }).catch(handleError)
+          } catch (error) {
+            handleError(error)
           }
-        });
+        })
       }
       return runtime.safeCall(doAdd, function(thunk) {
-        return thunk();
-      }, "gdrive-sheets:addWorksheet:doAdd");
+        return thunk()
+      }, "gdrive-sheets:addWorksheet:doAdd")
     }
 
     function worksheetToTable(ws, colNames) {
-      var cols = colNames ? colNames.length : ws.cols;
+      var cols = colNames ? colNames.length : ws.cols
       if (!colNames) {
         if (cols <= 26) {
-          colNames = Array.apply(null, Array(cols)).map(function (_, i) {
-            return String.fromCharCode(65 + i);});
+          colNames = Array.apply(null, new Array(cols)).map(function (_, index) {
+            return String.fromCharCode(65 + index)})
         } else {
-          var i = 26;
-          var j = 0;
-          var k = 0;
-          var curChar = String.fromCharCode(65 + j);
-          var suffix = '';
-          colNames = Array.apply(null, Array(26)).map(function (_, i) {
-            return String.fromCharCode(65 + i);});
-          var startOff = 0;
-          var startLen = 26;
+          var index = 26
+          var index_ = 0
+          var k = 0
+          var currentChar = String.fromCharCode(65 + index_)
+          var suffix = ''
+          colNames = Array.apply(null, Array.from({length: 26})).map(function (_, index__) {
+            return String.fromCharCode(65 + index__)})
+          var startOff = 0
+          var startLength = 26
           // Convoluted way of generating ['A', 'B', ..., 'AA', 'AB', ...]
-          while(++i <= cols) {
-            if (k >= startLen) {
-              ++j;
-              j = j % 26;
-              if (j === 0) {
-                startOff += startLen;
-                startLen *= 26;
+          while(++index <= cols) {
+            if (k >= startLength) {
+              ++index_
+              index_ = index_ % 26
+              if (index_ === 0) {
+                startOff += startLength
+                startLength *= 26
               }
-              k = startOff;
-              curChar = String.fromCharCode(65 + j);
+              k = startOff
+              currentChar = String.fromCharCode(65 + index_)
             }
-            colNames.push(curChar + colNames[k]);
-            ++k;
+            colNames.push(currentChar + colNames[k])
+            ++k
           }
         }
       }
-      function applyArray(arr) {
-        return function(v, i) {
-          return arr[i](v);
-        };
+      function applyArray(array) {
+        return function(v, index_) {
+          return array[index_](v)
+        }
       }
       function schemaToConstructor(schema) {
         if (schema.isOption) {
           var typeConstructor = schemaToConstructor({
             type: schema.type, isOption: false
-          });
+          })
           return function(v) {
-            if (v === null) {
-              return None();
-            } else {
-              return Some(typeConstructor(v));
-            }
-          };
+            return v === null ? None() : Some(typeConstructor(v))
+          }
         } else {
           switch (schema.type) {
-          case SHEET_TYPES.STRING:
-            return runtime.makeString;
-          case SHEET_TYPES.NUMBER:
-            return runtime.makeNumber;
-          case SHEET_TYPES.BOOL:
-            return runtime.makeBoolean;
-          case SHEET_TYPES.NONE:
-          default:
-            return function(v) {
-              if (v !== null) {
-                throw new Error(
-                  "Unknown type for sheet value " + v.toString());
-              } else {
-                return None();
+            case SHEET_TYPES.STRING:
+              return runtime.makeString
+            case SHEET_TYPES.NUMBER:
+              return runtime.makeNumber
+            case SHEET_TYPES.BOOL:
+              return runtime.makeBoolean
+            case SHEET_TYPES.NONE:
+            default:
+              return function(v) {
+                if (v !== null) {
+                  throw new Error(
+                    "Unknown type for sheet value " + v.toString())
+                } else {
+                  return None()
+                }
               }
-            };
           }
         }
       }
       return ws.getAllCells().then(function(data) {
         if (ws.typeErrors && (ws.typeErrors.length > 0)) {
-          var errmsgs = ws.typeErrors.map(runtime.ffi.makeMessageException);
+          var errmsgs = ws.typeErrors.map(runtime.ffi.makeMessageException)
           errmsgs.unshift(
-            runtime.ffi.makeMessageException("There were worksheet importing errors."));
-          runtime.ffi.throwMultiErrorException(runtime.ffi.makeList(errmsgs));
+            runtime.ffi.makeMessageException("There were worksheet importing errors."))
+          runtime.ffi.throwMultiErrorException(runtime.ffi.makeList(errmsgs))
         } else if (data.length === 0) {
-          return function() { runtime.getField(table, "makeTable")([], []); };
+          return function() { runtime.getField(table, "makeTable")([], []) }
         } else {
-          var constructors = ws.schema.map(schemaToConstructor);
-          var width = data[0].length;
-          data.forEach(function(row) {
+          var constructors = ws.schema.map(schemaToConstructor)
+          var width = data[0].length
+          for (const row of data) {
             if (row.length !== width) {
               throw new Error(
                 "Internal Error: Expected row of length " + width.toString()
                   + ", but found row of length " + row.length.toString()
-                  + ". Please report this error to the developers.");
+                  + ". Please report this error to the developers.")
             }
-          });
-          colNames = colNames.slice(ws.startCol, ws.startCol + width);
+          }
+          colNames = colNames.slice(ws.startCol, ws.startCol + width)
           var outData = (new Array(data.length)).fill().map(function(){
-            return new Array(width);
-          });
+            return new Array(width)
+          })
           return function() {
             return runtime.safeCall(function() {
-              return runtime.eachLoop(runtime.makeFunction(function(i) {
-                return runtime.eachLoop(runtime.makeFunction(function(curIdx) {
+              return runtime.eachLoop(runtime.makeFunction(function(index) {
+                return runtime.eachLoop(runtime.makeFunction(function(currentIndex) {
                   return runtime.safeCall(function() {
-                    return constructors[curIdx](data[i][curIdx]);
+                    return constructors[currentIndex](data[index][currentIndex])
                   }, function(result) {
-                    outData[i][curIdx] = result;
-                    return runtime.nothing;
-                  }, "gdrive-sheets:worksheetToTable:constructCell");
-                }), 0, width);
-              }), 0, data.length);
+                    outData[index][currentIndex] = result
+                    return runtime.nothing
+                  }, "gdrive-sheets:worksheetToTable:constructCell")
+                }), 0, width)
+              }), 0, data.length)
             }, function(_) {
-              return table.makeTable(colNames, outData);
-            }, "gdrive-sheets:worksheetToTable:constructValues");
-          };
+              return table.makeTable(colNames, outData)
+            }, "gdrive-sheets:worksheetToTable:constructValues")
+          }
         }
-      });
+      })
     }
 
     /**
@@ -270,205 +266,205 @@
      */
     function makeSheetLoader(load) {
       function doLoad(colNames, sanitizers) {
-        runtime.ffi.checkArity(2, arguments, "load", false);
-        runtime.checkArray(colNames);
-        runtime.checkArray(sanitizers);
-        sanitizers = sanitizers.map(runtime.extractLoaderOption);
-        var needsInference = [];
-        var resolved = [];
-        for (var i = 0; i < colNames.length; ++i) {
+        runtime.ffi.checkArity(2, arguments, "load", false)
+        runtime.checkArray(colNames)
+        runtime.checkArray(sanitizers)
+        sanitizers = sanitizers.map(runtime.extractLoaderOption)
+        var needsInference = []
+        var resolved = []
+        for (const [index, colName] of colNames.entries()) {
           var matching = sanitizers.find(function(s) {
-            return s.col == colNames[i];
-          });
+            return s.col == colName
+          })
           if (matching === undefined) {
-            needsInference.push({name: colNames[i], index: i});
+            needsInference.push({name: colName, index: index})
           } else {
-            resolved.push({name: colNames[i], sanitizer: matching.sanitizer, index: i});
+            resolved.push({name: colName, sanitizer: matching.sanitizer, index: index})
           }
         }
         return loadWorksheet(function() {
-          return load(needsInference.map(function(o){ return o.index; }));
+          return load(needsInference.map(function(o){ return o.index }))
         }, function(ws) {
-          return worksheetToLoadedTable(ws, resolved, needsInference);
-        });
+          return worksheetToLoadedTable(ws, resolved, needsInference)
+        })
       }
       return O({
         'load': F(doLoad)
-      });
+      })
     }
 
     function worksheetToLoadedTable(ws, resolved, needsInference) {
 
       function schemaToSanitizer(schema) {
-        var sanitizer;
+        var sanitizer
         switch(schema.type) {
-        case SHEET_TYPES.STRING:
-          sanitizer = runtime.builtin_sanitizers.string;
-          break;
-        case SHEET_TYPES.NUMBER:
-          sanitizer = runtime.builtin_sanitizers.strict_num;
-          break;
-        case SHEET_TYPES.BOOL:
-          sanitizer = runtime.builtin_sanitizers.bool;
-          break;
-        case SHEET_TYPES.NONE:
-        default:
-          sanitizer = runtime.builtin_sanitizers.empty_only;
+          case SHEET_TYPES.STRING:
+            sanitizer = runtime.builtin_sanitizers.string
+            break
+          case SHEET_TYPES.NUMBER:
+            sanitizer = runtime.builtin_sanitizers.strict_num
+            break
+          case SHEET_TYPES.BOOL:
+            sanitizer = runtime.builtin_sanitizers.bool
+            break
+          case SHEET_TYPES.NONE:
+          default:
+            sanitizer = runtime.builtin_sanitizers.empty_only
         }
         if (schema.isOption) {
-          sanitizer = runtime.builtin_sanitizers.option.app(sanitizer);
+          sanitizer = runtime.builtin_sanitizers.option.app(sanitizer)
         }
-        return sanitizer;
+        return sanitizer
       }
 
       function wrapCell(v) {
         if (v === null) {
-          return runtime.makeCEmpty();
+          return runtime.makeCEmpty()
         } else if (typeof v === 'string') {
-          return runtime.makeCStr(runtime.makeString(v));
+          return runtime.makeCStr(runtime.makeString(v))
         } else if (typeof v === 'number') {
-          return runtime.makeCNum(runtime.makeNumber(v));
+          return runtime.makeCNum(runtime.makeNumber(v))
         } else if (typeof v === 'boolean') {
-          return runtime.makeCBool(runtime.makeBoolean(v));
+          return runtime.makeCBool(runtime.makeBoolean(v))
         } else {
           runtime.ffi.throwMessageException(
             "Internal Error: wrapCell got unknown value: "
-              + ((v && v.toString) ? v.toString() : v));
+              + ((v && v.toString) ? v.toString() : v))
         }
       }
 
       return ws.getAllCells().then(function(data) {
         if (ws.typeErrors && (ws.typeErrors.length > 0)) {
-          var errmsgs = ws.typeErrors.map(runtime.ffi.makeMessageException);
+          var errmsgs = ws.typeErrors.map(runtime.ffi.makeMessageException)
           errmsgs.unshift(runtime.ffi.makeMessageException(
-            "There were worksheet importing errors."));
-          runtime.ffi.throwMultiErrorException(runtime.ffi.makeList(errmsgs));
+            "There were worksheet importing errors."))
+          runtime.ffi.throwMultiErrorException(runtime.ffi.makeList(errmsgs))
         } else if (data.length === 0) {
-          runtime.ffi.throwMessageException("Empty worksheets cannot be imported.");
+          runtime.ffi.throwMessageException("Empty worksheets cannot be imported.")
         } else {
-          var width = data[0].length;
+          var width = data[0].length
           // resolved and needsInference are *sorted by index*
-          var expectedLength = resolved.length + needsInference.length;
+          var expectedLength = resolved.length + needsInference.length
           if (expectedLength !== width) {
             runtime.ffi.throwMessageException("Loaded worksheet has "
                                               + ws.cols
                                               + " columns, but "
                                               + expectedLength
-                                              + " column names were given.");
+                                              + " column names were given.")
           }
-          data.forEach(function(row) {
+          for (const row of data) {
             if (row.length !== width) {
               throw new Error(
                 "Internal Error: Expected row of length " + width.toString()
                   + ", but found row of length " + row.length.toString()
-                  + ". Please report this error to the developers.");
+                  + ". Please report this error to the developers.")
             }
-          });
+          }
 
-          var fullySanitized = [];
-          var rIdx = resolved.length - 1;
-          var nIdx = needsInference.length - 1;
-          while (rIdx >= 0 && nIdx >= 0) {
-            if (resolved[rIdx].index > needsInference[nIdx].index) {
-              fullySanitized.push(resolved[rIdx--]);
+          var fullySanitized = []
+          var rIndex = resolved.length - 1
+          var nIndex = needsInference.length - 1
+          while (rIndex >= 0 && nIndex >= 0) {
+            if (resolved[rIndex].index > needsInference[nIndex].index) {
+              fullySanitized.push(resolved[rIndex--])
             } else {
-              var colIdx = needsInference[nIdx].index;
-              needsInference[nIdx].sanitizer = schemaToSanitizer(ws.schema[colIdx]);
-              fullySanitized.push(needsInference[nIdx--]);
+              var colIndex = needsInference[nIndex].index
+              needsInference[nIndex].sanitizer = schemaToSanitizer(ws.schema[colIndex])
+              fullySanitized.push(needsInference[nIndex--])
             }
           }
           // At most one of the following two loops will run
-          while (rIdx >= 0) {
-            fullySanitized.push(resolved[rIdx--]);
+          while (rIndex >= 0) {
+            fullySanitized.push(resolved[rIndex--])
           }
-          while (nIdx >= 0) {
-            var colIdx = needsInference[nIdx].index;
-            needsInference[nIdx].sanitizer = schemaToSanitizer(ws.schema[colIdx]);
-            fullySanitized.push(needsInference[nIdx--]);
+          while (nIndex >= 0) {
+            var colIndex = needsInference[nIndex].index
+            needsInference[nIndex].sanitizer = schemaToSanitizer(ws.schema[colIndex])
+            fullySanitized.push(needsInference[nIndex--])
           }
-          fullySanitized = fullySanitized.reverse();
+          fullySanitized = fullySanitized.reverse()
           var outData = (new Array(data.length)).fill().map(function(){
-            return new Array(width);
-          });
+            return new Array(width)
+          })
           return function() {
             return runtime.safeCall(function() {
-              return runtime.eachLoop(runtime.makeFunction(function(i) {
-                return runtime.eachLoop(runtime.makeFunction(function(curIdx) {
+              return runtime.eachLoop(runtime.makeFunction(function(index) {
+                return runtime.eachLoop(runtime.makeFunction(function(currentIndex) {
                   return runtime.safeCall(function() {
-                    return wrapCell(data[i][curIdx]);
+                    return wrapCell(data[index][currentIndex])
                   }, function(result) {
-                    outData[i][curIdx] = result;
-                    return runtime.nothing;
-                  }, "gdrive-sheets:worksheetToLoadedTable:constructCell");
+                    outData[index][currentIndex] = result
+                    return runtime.nothing
+                  }, "gdrive-sheets:worksheetToLoadedTable:constructCell")
                 }), 0, width)
-              }), 0, data.length);
+              }), 0, data.length)
             },
             function(_) {
-              return runtime.makeLoadedTable(fullySanitized, outData);
-            }, "gdrive-sheets:worksheetToLoadedTable:constructValues");
+              return runtime.makeLoadedTable(fullySanitized, outData)
+            }, "gdrive-sheets:worksheetToLoadedTable:constructValues")
           }
         }
-      });
+      })
     }
 
     function spreadsheetSheetByName(ss, name, skipHeaders) {
-      runtime.ffi.checkArity(3, arguments, "open-sheet", false);
-      checkSpreadsheet(ss);
-      runtime.checkString(name);
-      runtime.checkBoolean(skipHeaders);
-      return runtime.getField(ss, 'sheet-by-name').app(name, skipHeaders);
+      runtime.ffi.checkArity(3, arguments, "open-sheet", false)
+      checkSpreadsheet(ss)
+      runtime.checkString(name)
+      runtime.checkBoolean(skipHeaders)
+      return runtime.getField(ss, 'sheet-by-name').app(name, skipHeaders)
     }
 
-    function spreadsheetSheetByIndex(ss, idx, skipHeaders) {
-      runtime.ffi.checkArity(3, arguments, "open-sheet-by-index", false);
-      checkSpreadsheet(ss);
-      runtime.checkNumber(idx);
-      runtime.checkBoolean(skipHeaders);
-      return runtime.getField(ss, 'sheet-by-index').app(idx, skipHeaders);
+    function spreadsheetSheetByIndex(ss, index, skipHeaders) {
+      runtime.ffi.checkArity(3, arguments, "open-sheet-by-index", false)
+      checkSpreadsheet(ss)
+      runtime.checkNumber(index)
+      runtime.checkBoolean(skipHeaders)
+      return runtime.getField(ss, 'sheet-by-index').app(index, skipHeaders)
     }
 
     function makePyretSpreadsheet(ss) {
       function rawSheetNames() {
-        return ss.worksheetsInfo.map(function(ws) { return runtime.makeString(ws.properties.title); });
+        return ss.worksheetsInfo.map(function(ws) { return runtime.makeString(ws.properties.title) })
       }
       function sheetNames() {
-        runtime.ffi.checkArity(0, arguments, "sheet-names", true);
-        return runtime.ffi.makeList(rawSheetNames());
+        runtime.ffi.checkArity(0, arguments, "sheet-names", true)
+        return runtime.ffi.makeList(rawSheetNames())
       }
       
       function sheetByName(name, skipHeaders) {
-        runtime.ffi.checkArity(2, arguments, "sheet-by-name", true);
-        runtime.checkString(name);
-        runtime.checkBoolean(skipHeaders);
+        runtime.ffi.checkArity(2, arguments, "sheet-by-name", true)
+        runtime.checkString(name)
+        runtime.checkBoolean(skipHeaders)
         return makeSheetLoader(function(onlyInfer) {
-          return ss.getByName(name, skipHeaders, onlyInfer);
-        });
+          return ss.getByName(name, skipHeaders, onlyInfer)
+        })
         //return loadWorksheet(function(){return ss.getByName(name, skipHeaders);});
       }
       
-      function sheetByPos(idx, skipHeaders) {
-        runtime.ffi.checkArity(2, arguments, "sheet-by-index", true);
-        runtime.checkNumber(idx);
-        runtime.checkBoolean(skipHeaders);
+      function sheetByPos(index, skipHeaders) {
+        runtime.ffi.checkArity(2, arguments, "sheet-by-index", true)
+        runtime.checkNumber(index)
+        runtime.checkBoolean(skipHeaders)
         return makeSheetLoader(function(onlyInfer) {
-          return ss.getByIndex(idx, skipHeaders, onlyInfer);
-        });
+          return ss.getByIndex(index, skipHeaders, onlyInfer)
+        })
         //return loadWorksheet(function(){return ss.getByIndex(idx, skipHeaders);});
       }
       function deleteSheetByName(name) {
-        runtime.ffi.checkArity(1, arguments, "delete-sheet-by-name", true);
-        runtime.checkString(name);
-        return deleteWorksheet(function(){return ss.deleteByName(name);});
+        runtime.ffi.checkArity(1, arguments, "delete-sheet-by-name", true)
+        runtime.checkString(name)
+        return deleteWorksheet(function(){return ss.deleteByName(name)})
       }
-      function deleteSheetByPos(idx) {
-        runtime.ffi.checkArity(1, arguments, "delete-sheet-by-index", true);
-        runtime.checkNumber(idx);
-        return deleteWorksheet(function(){return ss.deleteByIndex(idx);});
+      function deleteSheetByPos(index) {
+        runtime.ffi.checkArity(1, arguments, "delete-sheet-by-index", true)
+        runtime.checkNumber(index)
+        return deleteWorksheet(function(){return ss.deleteByIndex(index)})
       }
       function addSheet(name) {
-        runtime.ffi.checkArity(1, arguments, "add-sheet", true);
-        runtime.checkString(name);
-        return addWorksheet(function(){return ss.addWorksheet(name);});
+        runtime.ffi.checkArity(1, arguments, "add-sheet", true)
+        runtime.checkString(name)
+        return addWorksheet(function(){return ss.addWorksheet(name)})
       }
 
       return applyBrand(brandSS, O({
@@ -481,65 +477,65 @@
         '_output': runtime.makeMethod0(function(self) {
           return runtime.getField(VS, "vs-constr").app(
             "spreadsheet",
-            runtime.ffi.makeList(rawSheetNames().map(function(v) { return runtime.getField(VS, "vs-value").app(v); })));
+            runtime.ffi.makeList(rawSheetNames().map(function(v) { return runtime.getField(VS, "vs-value").app(v) })))
         })
-      }));
+      }))
     }
     
     function createSpreadsheet(name) {
-      runtime.ffi.checkArity(1, arguments, "create-spreadsheet", false);
-      runtime.checkString(name);
+      runtime.ffi.checkArity(1, arguments, "create-spreadsheet", false)
+      runtime.checkString(name)
       return runtime.pauseStack(function(resumer) {
         sheetsAPI.then(function(api) {
-          return api.createSpreadsheet(name);
+          return api.createSpreadsheet(name)
         })
           .then(makePyretSpreadsheet)
-          .then(function(ss) { resumer.resume(ss); })
-          .catch(function(err) {
-            if (runtime.isPyretException(err)) {
-              resumer.error(err);
+          .then(function(ss) { resumer.resume(ss) })
+          .catch(function(error) {
+            if (runtime.isPyretException(error)) {
+              resumer.error(error)
             } else {
-              if (err && err.message) err = err.message;
-              resumer.error(runtime.ffi.makeMessageException(err));
+              if (error && error.message) error = error.message
+              resumer.error(runtime.ffi.makeMessageException(error))
             }
-          });
-      });
+          })
+      })
     }
 
     function loadSpreadsheet(loader) {
       
       return runtime.pauseStack(function(resumer) {
         sheetsAPI.then(function(api) {
-          SHEET_TYPES = api.TYPES;
-          return loader(api);
+          SHEET_TYPES = api.TYPES
+          return loader(api)
         })
           .then(makePyretSpreadsheet)
-          .then(function(ss) { resumer.resume(ss); })
-          .catch(function(err) {
-            if (runtime.isPyretException(err)) {
-              resumer.error(err);
+          .then(function(ss) { resumer.resume(ss) })
+          .catch(function(error) {
+            if (runtime.isPyretException(error)) {
+              resumer.error(error)
             } else {
-              if (err && err.message) err = err.message;
-              resumer.error(runtime.ffi.makeMessageException(err));
+              if (error && error.message) error = error.message
+              resumer.error(runtime.ffi.makeMessageException(error))
             }
-          });
-      });
+          })
+      })
     }
 
     function loadLocalSheet(name) {
-      runtime.ffi.checkArity(1, arguments, 'my-spreadsheet', false);
-      runtime.checkString(name);
+      runtime.ffi.checkArity(1, arguments, 'my-spreadsheet', false)
+      runtime.checkString(name)
       return loadSpreadsheet(function(api) {
-        return api.loadSpreadsheetByName(name);
-      });
+        return api.loadSpreadsheetByName(name)
+      })
     }
 
     function loadSheetById(id) {
-      runtime.ffi.checkArity(1, arguments, 'load-spreadsheet', false);
-      runtime.checkString(id);
+      runtime.ffi.checkArity(1, arguments, 'load-spreadsheet', false)
+      runtime.checkString(id)
       return loadSpreadsheet(function(api) {
-        return api.loadSpreadsheetById(id);
-      });
+        return api.loadSpreadsheetById(id)
+      })
     }
     
     return runtime.makeModuleReturn(
@@ -553,7 +549,7 @@
         'open-sheet-by-index': F(spreadsheetSheetByIndex, "open-sheet-by-index")
       },
       {}
-    );
+    )
   }
 })
 

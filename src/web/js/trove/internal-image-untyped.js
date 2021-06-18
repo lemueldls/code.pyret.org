@@ -9,8 +9,8 @@
   provides: {
     shorthands: {
       "Image": { tag: "name",
-                 origin: { "import-type": "uri", uri: "builtin://image-lib" },
-                 name: "Image" },
+        origin: { "import-type": "uri", uri: "builtin://image-lib" },
+        name: "Image" },
       "FillMode": "String",
       "FontFamily": "String",
       "FontStyle": "String",
@@ -19,35 +19,35 @@
       "YPlace": "String",
       "ColorString": "String",
       "Color": { tag: "name",
-                  origin: { "import-type": "uri", uri: "builtin://color" },
-                  name: "Color" },
+        origin: { "import-type": "uri", uri: "builtin://color" },
+        name: "Color" },
       "OptColor": ["tyapp", { tag: "name",
-                              origin: { "import-type": "uri", uri: "builtin://option" },
-                              name: "Option" },
-                   [{ tag: "name",
-                      origin: { "import-type": "uri", uri: "builtin://color" },
-                      name: "Color" }]],
+        origin: { "import-type": "uri", uri: "builtin://option" },
+        name: "Option" },
+      [{ tag: "name",
+        origin: { "import-type": "uri", uri: "builtin://color" },
+        name: "Color" }]],
       "Either": { tag: "name",
-                  origin: { "import-type": "uri", uri: "builtin://either" },
-                  name: "Either" },
+        origin: { "import-type": "uri", uri: "builtin://either" },
+        name: "Either" },
       "LoC": ["tyapp", { tag: "name",
-                         origin: { "import-type": "uri", uri: "builtin://lists" },
-                         name: "List" },
-              [{ tag: "name",
-                 origin: { "import-type": "uri", uri: "builtin://color" },
-                 name: "Color" }]],
+        origin: { "import-type": "uri", uri: "builtin://lists" },
+        name: "List" },
+      [{ tag: "name",
+        origin: { "import-type": "uri", uri: "builtin://color" },
+        name: "Color" }]],
       "LoI": ["tyapp", { tag: "name",
-                         origin: { "import-type": "uri", uri: "builtin://lists" },
-                         name: "List" },
-              [{ tag: "name",
-                 origin: { "import-type": "uri", uri: "builtin://image-lib" },
-                 name: "Image" }]],
+        origin: { "import-type": "uri", uri: "builtin://lists" },
+        name: "List" },
+      [{ tag: "name",
+        origin: { "import-type": "uri", uri: "builtin://image-lib" },
+        name: "Image" }]],
       "LoP": ["tyapp", { tag: "name",
-                         origin: { "import-type": "uri", uri: "builtin://lists" },
-                         name: "List" },
-              [{ tag: "name",
-                 origin: { "import-type": "uri", uri: "builtin://internal-image-shared" },
-                 name: "Point" }]],
+        origin: { "import-type": "uri", uri: "builtin://lists" },
+        name: "List" },
+      [{ tag: "name",
+        origin: { "import-type": "uri", uri: "builtin://internal-image-shared" },
+        name: "Point" }]],
     },
     values: {
       "circle": ["arrow", ["Number", "FillMode", "ColorString"], "Image"],
@@ -64,16 +64,16 @@
       "images-difference": ["arrow", ["Image", "Image"], ["tyapp", "Either", ["String", "Number"]]],
       "text": ["arrow", ["String", "Number", "ColorString"], "Image"],
       "text-font": ["arrow",
-                    ["String", "Number", "ColorString", "String", "FontFamily", "FontStyle", "FontWeight", "Boolean"],
-                    "Image"],
+        ["String", "Number", "ColorString", "String", "FontFamily", "FontStyle", "FontWeight", "Boolean"],
+        "Image"],
       "overlay": ["arrow", ["Image", "Image"], "Image"],
       "overlay-list": ["arrow", ["LoI"], "Image"],
       "overlay-xy": ["arrow", ["Image", "Number", "Number", "Image"], "Image"],
       "overlay-align": ["arrow", ["XPlace", "YPlace", "Image", "Image"], "Image"],
       "overlay-align-list": ["arrow", ["XPlace", "YPlace", "LoI"], "Image"],
       "overlay-onto-offset": ["arrow",
-                              ["Image", "XPlace", "YPlace", "Number", "Number", "Image", "XPlace", "YPlace"],
-                              "Image"],
+        ["Image", "XPlace", "YPlace", "Number", "Number", "Image", "XPlace", "YPlace"],
+        "Image"],
       "underlay": ["arrow", ["Image", "Image"], "Image"],
       "underlay-list": ["arrow", ["LoI"], "Image"],
       "underlay-xy": ["arrow", ["Image", "Number", "Number","Image"], "Image"],
@@ -149,39 +149,39 @@
     },
     aliases: {
       "Image": { tag: "name",
-                 origin: { "import-type": "uri", uri: "builtin://image-lib" },
-                 name: "Image" }
+        origin: { "import-type": "uri", uri: "builtin://image-lib" },
+        name: "Image" }
     }
   },
-  theModule: function(runtime, namespace, uri, imageLib, makeImage, jsnums) {
-    var ffi = runtime.ffi;
+  theModule: function(runtime, namespace, uri, imageLibrary, makeImage, jsnums) {
+    var ffi = runtime.ffi
 
-    var isString = runtime.isString;
+    var isString = runtime.isString
 
-    console.log("From untyped: ", imageLib);
+    console.log("From untyped:", imageLibrary)
 
-    var image = runtime.getField(imageLib, "internal");
-    var colorDb = image.colorDb;
+    var image = runtime.getField(imageLibrary, "internal")
+    var colorDatabase = image.colorDb
 
-    const checkArity = ffi.checkArity;
-    const c = function(name, ...argsAndAnns) {
-      runtime.checkArgsInternalInline("image-untyped", name, ...argsAndAnns);
-    };
-    const c1 = function(name, arg, ann) {
-      runtime.checkArgsInternal1("image-untyped", name, arg, ann);
-    };
-    const c2 = function(name, arg1, ann1, arg2, ann2) {
-      runtime.checkArgsInternal2("image-untyped", name, arg1, ann1, arg2, ann2);
-    };
-    const c3 = function(name, arg1, ann1, arg2, ann2, arg3, ann3) {
-      runtime.checkArgsInternal3("image-untyped", name, arg1, ann1, arg2, ann2, arg3, ann3);
-    };
+    const checkArity = ffi.checkArity
+    const c = function(name, ...argumentsAndAnns) {
+      runtime.checkArgsInternalInline("image-untyped", name, ...argumentsAndAnns)
+    }
+    const c1 = function(name, argument, ann) {
+      runtime.checkArgsInternal1("image-untyped", name, argument, ann)
+    }
+    const c2 = function(name, argument1, ann1, argument2, ann2) {
+      runtime.checkArgsInternal2("image-untyped", name, argument1, ann1, argument2, ann2)
+    }
+    const c3 = function(name, argument1, ann1, argument2, ann2, argument3, ann3) {
+      runtime.checkArgsInternal3("image-untyped", name, argument1, ann1, argument2, ann2, argument3, ann3)
+    }
 
     var ann = function(name, pred) {
-      return runtime.makePrimitiveAnn(name, pred);
-    };
+      return runtime.makePrimitiveAnn(name, pred)
+    }
 
-    var identity = function(x) { return x; };
+    var identity = function(x) { return x }
 
     var isPlaceX = function(x) {
       return (isString(x) &&
@@ -189,8 +189,8 @@
                x.toString().toLowerCase() == "right" ||
                x.toString().toLowerCase() == "center" ||
                x.toString().toLowerCase() == "pinhole" ||
-               x.toString().toLowerCase() == "middle"));
-    };
+               x.toString().toLowerCase() == "middle"))
+    }
     var isPlaceY = function(x) {
       return (isString(x) &&
               (x.toString().toLowerCase() == "top"	  ||
@@ -198,63 +198,63 @@
                x.toString().toLowerCase() == "baseline" ||
                x.toString().toLowerCase() == "center"   ||
                x.toString().toLowerCase() == "pinhole"  ||
-               x.toString().toLowerCase() == "middle"));
-    };
+               x.toString().toLowerCase() == "middle"))
+    }
 
-    var checkImagePred = function(val) {
-      return runtime.isOpaque(val) && image.isImage(val.val);
-    };
-    var checkScenePred = function(val) {
-      return runtime.isOpaque(val) && image.isScene(val.val);
-    };
+    var checkImagePred = function(value) {
+      return runtime.isOpaque(value) && image.isImage(value.val)
+    }
+    var checkScenePred = function(value) {
+      return runtime.isOpaque(value) && image.isScene(value.val)
+    }
 
-    var unwrapPoint2D = function(val) {
-      var gf = runtime.getField;
-      var hf = runtime.hasField;
-      if (hf(val, "r") && hf(val, "theta")) {
-        var r = jsnums.toFixnum(gf(val, "r"));
-        var theta = jsnums.toFixnum(gf(val, "theta"));
-        return { x: r * Math.cos(theta), y: r * Math.sin(theta) };
+    var unwrapPoint2D = function(value) {
+      var gf = runtime.getField
+      var hf = runtime.hasField
+      if (hf(value, "r") && hf(value, "theta")) {
+        var r = jsnums.toFixnum(gf(value, "r"))
+        var theta = jsnums.toFixnum(gf(value, "theta"))
+        return { x: r * Math.cos(theta), y: r * Math.sin(theta) }
       }
-      return { x: jsnums.toFixnum(gf(val, "x")), y: jsnums.toFixnum(gf(val, "y")) };
-    };
+      return { x: jsnums.toFixnum(gf(value, "x")), y: jsnums.toFixnum(gf(value, "y")) }
+    }
 
-    var annListImage = ann("List<Image>", function(val) {
-      if (!runtime.ffi.isList(val)) return false;
-      var cur = val;
-      var gf = runtime.getField;
-      while (runtime.unwrap(ffi.isLink(cur))) {
-        var f = gf(cur, "first");
-        if (!checkImagePred(f)) return false;
-        cur = gf(cur, "rest");
+    var annListImage = ann("List<Image>", function(value) {
+      if (!runtime.ffi.isList(value)) return false
+      var current = value
+      var gf = runtime.getField
+      while (runtime.unwrap(ffi.isLink(current))) {
+        var f = gf(current, "first")
+        if (!checkImagePred(f)) return false
+        current = gf(current, "rest")
       }
-      return true;
-    });
+      return true
+    })
 
-    var unwrapColor = function(val) {
-      var aColor = val;
-      if (colorDb.get(aColor)) {
-        aColor = colorDb.get(aColor);
+    var unwrapColor = function(value) {
+      var aColor = value
+      if (colorDatabase.get(aColor)) {
+        aColor = colorDatabase.get(aColor)
       }
-      return aColor;
-    };
+      return aColor
+    }
 
     const ANNOTS = {
       annString: runtime.String,
       annNumber: runtime.Number,
       annPositive: runtime.NumPositive,
       annNumNonNegative: runtime.NumNonNegative,
-      annByte: ann("Number between 0 and 255", function(val) {
-        return runtime.isNumber(val)
-          && jsnums.greaterThanOrEqual(val, 0, runtime.NumberErrbacks)
-          && jsnums.greaterThanOrEqual(255, val, runtime.NumberErrbacks);
+      annByte: ann("Number between 0 and 255", function(value) {
+        return runtime.isNumber(value)
+          && jsnums.greaterThanOrEqual(value, 0, runtime.NumberErrbacks)
+          && jsnums.greaterThanOrEqual(255, value, runtime.NumberErrbacks)
       }),
-      annReal: ann("Real Number", function(val) {
-        return runtime.isNumber(val) && jsnums.isReal(val);
+      annReal: ann("Real Number", function(value) {
+        return runtime.isNumber(value) && jsnums.isReal(value)
       }),
-      annNatural: ann("Natural Number", function(val) {
-        return runtime.isNumber(val) && jsnums.isInteger(val)
-          && jsnums.greaterThanOrEqual(val, 0, runtime.NumberErrbacks);
+      annNatural: ann("Natural Number", function(value) {
+        return runtime.isNumber(value) && jsnums.isInteger(value)
+          && jsnums.greaterThanOrEqual(value, 0, runtime.NumberErrbacks)
       }),
       unwrapColor: unwrapColor,
       annColor: ann("Color", image.isColorOrColorString),
@@ -265,13 +265,10 @@
                  x.toString().toLowerCase() == "outline")) ||
           ((jsnums.isReal(x)) &&
            (jsnums.greaterThanOrEqual(x, 0, runtime.NumberErrbacks) &&
-            jsnums.lessThanOrEqual(x, 1, runtime.NumberErrbacks)));
+            jsnums.lessThanOrEqual(x, 1, runtime.NumberErrbacks)))
       }),
-      unwrapMode: function(val) {
-        if (typeof val === "string")
-          return val;
-        else
-          return jsnums.toFixnum(val);
+      unwrapMode: function(value) {
+        return typeof value === "string" ? value : jsnums.toFixnum(value)
       },
       annFontFamily: ann("Font Family", function(x){
         return (isString(x) &&
@@ -283,7 +280,7 @@
                  x.toString().toLowerCase() == "modern" ||
                  x.toString().toLowerCase() == "symbol" ||
                  x.toString().toLowerCase() == "system"))
-          || (x === false);		// false is also acceptable
+          || (x === false)		// false is also acceptable
       }),
       unwrapFontFamily: identity,
       annFontStyle: ann("Font Style (\"normal\", \"italic\", or \"slant\")", function(x){
@@ -291,7 +288,7 @@
                 (x.toString().toLowerCase() == "normal" ||
                  x.toString().toLowerCase() == "italic" ||
                  x.toString().toLowerCase() == "slant"))
-          || (x === false);		// false is also acceptable
+          || (x === false)		// false is also acceptable
       }),
       unwrapFontStyle: identity,
       annFontWeight: ann("Font Weight", function(x){
@@ -299,77 +296,77 @@
                 (x.toString().toLowerCase() == "normal" ||
                  x.toString().toLowerCase() == "bold" ||
                  x.toString().toLowerCase() == "light"))
-          || (x === false);		// false is also acceptable
+          || (x === false)		// false is also acceptable
       }),
       unwrapFontWeight: identity,
       annPlaceX: ann("X Place (\"left\", \"middle\", \"center\", \"pinhole\", or \"right\")", isPlaceX),
-      unwrapPlaceX: function(val) {
-        if (val.toString().toLowerCase() == "center") return "middle";
-        return val;
+      unwrapPlaceX: function(value) {
+        if (value.toString().toLowerCase() == "center") return "middle"
+        return value
       },
       annPlaceY: ann("Y Place (\"top\", \"bottom\", \"center\", \"pinhole\", \"baseline\", or \"middle\")", isPlaceY),
-      unwrapPlaceY: function(val) {
-        if (val.toString().toLowerCase() == "middle") return "center";
-        return val;
+      unwrapPlaceY: function(value) {
+        if (value.toString().toLowerCase() == "middle") return "center"
+        return value
       },
       annImage: ann("Image", checkImagePred),
-      unwrapImage: function(val) {
-        return val.val;
+      unwrapImage: function(value) {
+        return value.val
       },
-      annImageOrScene: ann("Image", function(val) {
-        return runtime.isOpaque(val) && (image.isImage(val.val) || image.isScene(val.val));
+      annImageOrScene: ann("Image", function(value) {
+        return runtime.isOpaque(value) && (image.isImage(value.val) || image.isScene(value.val))
       }),
-      unwrapImageOrScene: function(val) {
-        return val.val;
+      unwrapImageOrScene: function(value) {
+        return value.val
       },
       annAngle: ann("Angle (a number 'x' where 0 <= x < 360)", image.isAngle),
       annListImage: annListImage,
       unwrapListofImage: identity,
-      annListColor: ann("List<Color>", function(val) {
-        return runtime.ffi.isList(val);
+      annListColor: ann("List<Color>", function(value) {
+        return runtime.ffi.isList(value)
       }),
-      unwrapListofColor: function(val) {
-        return ffi.makeList(ffi.toArray(val).map(unwrapColor));
+      unwrapListofColor: function(value) {
+        return ffi.makeList(ffi.toArray(value).map(unwrapColor))
       },
-      annListPoint2D: ann("List<Point>", function(val) {
-        return runtime.ffi.isList(val);
+      annListPoint2D: ann("List<Point>", function(value) {
+        return runtime.ffi.isList(value)
       }),
-      unwrapListofPoint2D: function(val) {
-        return ffi.toArray(val).map(unwrapPoint2D);
+      unwrapListofPoint2D: function(value) {
+        return ffi.toArray(value).map(unwrapPoint2D)
       },
       annSideCount: ann("Side Count", image.isSideCount),
       annStepCount: ann("Step Count", image.isStepCount),
       annPointCount: ann("Points Count", image.isPointsCount)
-    };
+    }
 
 
-    var values = makeImage.makeImageLib("image-untyped", ANNOTS);
+    var values = makeImage.makeImageLib("image-untyped", ANNOTS)
     function f(name, fun) {
-      values[name] = runtime.makeFunction(fun, name);
+      values[name] = runtime.makeFunction(fun, name)
     }
 
     f("is-image-color", function(maybeColor) {
-      checkArity(1, arguments, "image", false);
-      return runtime.wrap(image.isColorOrColorString(maybeColor));
-    });
+      checkArity(1, arguments, "image", false)
+      return runtime.wrap(image.isColorOrColorString(maybeColor))
+    })
     f("is-mode", function(maybeMode) {
-      checkArity(1, arguments, "is-mode", false);
-      return runtime.wrap(isMode(maybeMode));
-    });
+      checkArity(1, arguments, "is-mode", false)
+      return runtime.wrap(isMode(maybeMode))
+    })
     f("is-x-place", function(maybeXPlace) {
-      checkArity(1, arguments, "is-x-place", false);
-      return runtime.wrap(isPlaceX(maybeXPlace));
-    });
+      checkArity(1, arguments, "is-x-place", false)
+      return runtime.wrap(isPlaceX(maybeXPlace))
+    })
     f("is-y-place", function(maybeYPlace) {
-      checkArity(1, arguments, "is-y-place", false);
-      return runtime.wrap(isPlaceY(maybeYPlace));
-    });
+      checkArity(1, arguments, "is-y-place", false)
+      return runtime.wrap(isPlaceY(maybeYPlace))
+    })
 
 
     
     return runtime.makeModuleReturn(values, {
-        "Image": image.Image,
-        "Scene": runtime.makePrimitiveAnn("Scene", checkScenePred)
-      });
+      "Image": image.Image,
+      "Scene": runtime.makePrimitiveAnn("Scene", checkScenePred)
+    })
   }
 })

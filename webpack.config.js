@@ -1,22 +1,27 @@
-const path = require("path");
-const { DefinePlugin } = require("webpack");
+import path from "node:path";
+import { fileURLToPath } from "url";
 
-const dotEnvExtended = require("dotenv-extended");
-const dotenvParseVariables = require("dotenv-parse-variables");
+import webpack from "webpack";
 
-const env = dotenvParseVariables(dotEnvExtended.load());
+import dotEnvExtended from "dotenv-extended";
+import dotenvParseVariables from "dotenv-parse-variables";
 
-const { NODE_ENV } = env;
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+const environment = dotenvParseVariables(dotEnvExtended.load());
+
+const { NODE_ENV } = environment;
 
 const IS_PRODUCTION = NODE_ENV == "production";
 const SRC_DIRECTORY = path.resolve(__dirname, "src");
 
-module.exports = {
+export default {
   mode: NODE_ENV,
+  target: "web",
   output: {
     path: path.resolve(__dirname, "build", "web"),
     filename: "[name].js",
-    publicPath: IS_PRODUCTION ? undefined : env.ASSET_BASE_URL + "/",
+    publicPath: IS_PRODUCTION ? undefined : environment.ASSET_BASE_URL + "/",
   },
   devtool: IS_PRODUCTION ? "source-map" : "inline-source-map",
   entry: {
@@ -43,8 +48,8 @@ module.exports = {
     alias: {},
   },
   plugins: [
-    new DefinePlugin({
-      "process.env": JSON.stringify(env),
+    new webpack.DefinePlugin({
+      "process.env": JSON.stringify(environment),
     }),
   ],
   devServer: {

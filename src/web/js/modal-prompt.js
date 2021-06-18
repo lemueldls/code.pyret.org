@@ -10,22 +10,23 @@
  *       general-purpose in the future, but, for now,
  *       be aware of these limitations.
  */
-define("cpo/modal-prompt", ["q"], function(Q) {
-
+define("cpo/modal-prompt", ["q"], function (Q) {
   function autoHighlightBox(text) {
     var textBox = $("<input type='text'>").addClass("auto-highlight");
     textBox.attr("readonly", "readonly");
-    textBox.on("focus", function() { $(this).select(); });
-    textBox.on("mouseup", function() { $(this).select(); });
+    textBox.on("focus", function () {
+      $(this).select();
+    });
+    textBox.on("mouseup", function () {
+      $(this).select();
+    });
     textBox.val(text);
     return textBox;
   }
 
   // Allows asynchronous requesting of prompts
   var promptQueue = Q();
-  var styles = [
-    "radio", "tiles", "text", "copyText", "confirm"
-  ];
+  var styles = ["radio", "tiles", "text", "copyText", "confirm"];
 
   window.modals = [];
 
@@ -44,10 +45,13 @@ define("cpo/modal-prompt", ["q"], function(Q) {
    */
   function Prompt(options) {
     window.modals.push(this);
-    if (!options ||
-        (styles.indexOf(options.style) === -1) ||
-        !options.options ||
-        (typeof options.options.length !== "number") || (options.options.length === 0)) {
+    if (
+      !options ||
+      styles.indexOf(options.style) === -1 ||
+      !options.options ||
+      typeof options.options.length !== "number" ||
+      options.options.length === 0
+    ) {
       throw new Error("Invalid Prompt Options", options);
     }
     this.options = options;
@@ -66,10 +70,9 @@ define("cpo/modal-prompt", ["q"], function(Q) {
     this.title = $(".modal-header > h3", this.modal);
     this.closeButton = $(".close", this.modal);
     this.submitButton = $(".submit", this.modal);
-    if(this.options.submitText) {
+    if (this.options.submitText) {
       this.submitButton.text(this.options.submitText);
-    }
-    else {
+    } else {
       this.submitButton.text("Submit");
     }
     this.isCompiled = false;
@@ -91,7 +94,7 @@ define("cpo/modal-prompt", ["q"], function(Q) {
    * @returns A promise resolving to either the result of `callback`, if provided,
    *          or the result of the prompt, otherwise.
    */
-  Prompt.prototype.show = function(callback) {
+  Prompt.prototype.show = function (callback) {
     // Use the promise queue to make sure there's no other
     // prompt being shown currently
     if (this.options.hideSubmit) {
@@ -101,25 +104,25 @@ define("cpo/modal-prompt", ["q"], function(Q) {
     }
     this.closeButton.click(this.onClose.bind(this));
     this.submitButton.click(this.onSubmit.bind(this));
-    var docClick = (function(e) {
+    var docClick = function (e) {
       // If the prompt is active and the background is clicked,
       // then close.
       if ($(e.target).is(this.modal) && this.deferred) {
         this.onClose(e);
         $(document).off("click", docClick);
       }
-    }).bind(this);
+    }.bind(this);
     $(document).click(docClick);
-    var docKeydown = (function(e) {
+    var docKeydown = function (e) {
       if (e.key === "Escape") {
         this.onClose(e);
         $(document).off("keydown", docKeydown);
       }
-    }).bind(this);
+    }.bind(this);
     $(document).keydown(docKeydown);
     this.title.text(this.options.title);
     this.populateModal();
-    this.modal.css('display', 'block');
+    this.modal.css("display", "block");
 
     if (callback) {
       return this.promise.then(callback);
@@ -128,67 +131,74 @@ define("cpo/modal-prompt", ["q"], function(Q) {
     }
   };
 
-
   /**
    * Clears the contents of the modal prompt.
    */
-  Prompt.prototype.clearModal = function() {
+  Prompt.prototype.clearModal = function () {
     this.submitButton.off();
     this.closeButton.off();
     this.elts.empty();
   };
-  
+
   /**
    * Populates the contents of the modal prompt with the
    * options in this prompt.
    */
-  Prompt.prototype.populateModal = function() {
+  Prompt.prototype.populateModal = function () {
     function createRadioElt(option, idx) {
-      var elt = $($.parseHTML("<input name=\"pyret-modal\" type=\"radio\">"));
+      var elt = $($.parseHTML('<input name="pyret-modal" type="radio">'));
       var id = "r" + idx.toString();
-      var label = $($.parseHTML("<label for=\"" + id + "\"></label>"));
+      var label = $($.parseHTML('<label for="' + id + '"></label>'));
       elt.attr("id", id);
       elt.attr("value", option.value);
       label.text(option.message);
-      var eltContainer = $($.parseHTML("<td class=\"pyret-modal-option-radio\"></td>"));
+      var eltContainer = $(
+        $.parseHTML('<td class="pyret-modal-option-radio"></td>')
+      );
       eltContainer.append(elt);
-      var labelContainer = $($.parseHTML("<td class=\"pyret-modal-option-message\"></td>"));
+      var labelContainer = $(
+        $.parseHTML('<td class="pyret-modal-option-message"></td>')
+      );
       labelContainer.append(label);
-      var container = $($.parseHTML("<tr class=\"pyret-modal-option\"></tr>"));
+      var container = $($.parseHTML('<tr class="pyret-modal-option"></tr>'));
       container.append(eltContainer);
       container.append(labelContainer);
       if (option.example) {
         var example = $($.parseHTML("<div></div>"));
         var cm = CodeMirror(example[0], {
           value: option.example,
-          mode: 'pyret',
+          mode: "pyret",
           lineNumbers: false,
-          readOnly: true
+          readOnly: true,
         });
-        setTimeout(function(){
+        setTimeout(function () {
           cm.refresh();
         }, 1);
-        var exampleContainer = $($.parseHTML("<td class=\"pyret-modal-option-example\"></td>"));
+        var exampleContainer = $(
+          $.parseHTML('<td class="pyret-modal-option-example"></td>')
+        );
         exampleContainer.append(example);
         container.append(exampleContainer);
       }
-      
+
       return container;
     }
     function createTileElt(option, idx) {
-      var elt = $($.parseHTML("<button name=\"pyret-modal\" class=\"tile\"></button>"));
+      var elt = $(
+        $.parseHTML('<button name="pyret-modal" class="tile"></button>')
+      );
       elt.attr("id", "t" + idx.toString());
-      elt.append($("<b>").text(option.message))
+      elt
+        .append($("<b>").text(option.message))
         .append($("<p>").text(option.details));
-      for (var evt in option.on)
-        elt.on(evt, option.on[evt]);
+      for (var evt in option.on) elt.on(evt, option.on[evt]);
       return elt;
     }
 
     function createTextElt(option) {
       var elt = $("<div>");
       elt.append($("<span>").addClass("textLabel").text(option.message));
-//      elt.append($("<span>").text("(" + option.details + ")"));
+      //      elt.append($("<span>").text("(" + option.details + ")"));
       elt.append($("<input type='text'>").val(option.defaultValue));
       return elt;
     }
@@ -196,9 +206,9 @@ define("cpo/modal-prompt", ["q"], function(Q) {
     function createCopyTextElt(option) {
       var elt = $("<div>");
       elt.append($("<p>").addClass("textLabel").text(option.message));
-      if(option.text) {
+      if (option.text) {
         var box = autoHighlightBox(option.text);
-  //      elt.append($("<span>").text("(" + option.details + ")"));
+        //      elt.append($("<span>").text("(" + option.details + ")"));
         elt.append(box);
         box.focus();
       }
@@ -212,33 +222,29 @@ define("cpo/modal-prompt", ["q"], function(Q) {
     var that = this;
 
     function createElt(option, i) {
-      if(that.options.style === "radio") {
+      if (that.options.style === "radio") {
         return createRadioElt(option, i);
-      }
-      else if(that.options.style === "tiles") {
+      } else if (that.options.style === "tiles") {
         return createTileElt(option, i);
-      }
-      else if(that.options.style === "text") {
+      } else if (that.options.style === "text") {
         return createTextElt(option);
-      }
-      else if(that.options.style === "copyText") {
+      } else if (that.options.style === "copyText") {
         return createCopyTextElt(option);
-      }
-      else if(that.options.style === "confirm") {
+      } else if (that.options.style === "confirm") {
         return createConfirmElt(option);
       }
     }
 
     var optionElts;
     // Cache results
-//    if (true) {
-      optionElts = this.options.options.map(createElt);
-//      this.compiledElts = optionElts;
-//      this.isCompiled = true;
-//    } else {
-//      optionElts = this.compiledElts;
-//    }
-    $("input[type='radio']", optionElts[0]).attr('checked', true);
+    //    if (true) {
+    optionElts = this.options.options.map(createElt);
+    //      this.compiledElts = optionElts;
+    //      this.isCompiled = true;
+    //    } else {
+    //      optionElts = this.compiledElts;
+    //    }
+    $("input[type='radio']", optionElts[0]).attr("checked", true);
     this.elts.append(optionElts);
     $(".modal-body", this.modal).empty().append(this.elts);
     optionElts[0].focus();
@@ -247,8 +253,8 @@ define("cpo/modal-prompt", ["q"], function(Q) {
   /**
    * Handler which is called when the user does not select anything
    */
-  Prompt.prototype.onClose = function(e) {
-    this.modal.css('display', 'none');
+  Prompt.prototype.onClose = function (e) {
+    this.modal.css("display", "none");
     this.clearModal();
     this.deferred.resolve(null);
     delete this.deferred;
@@ -258,30 +264,26 @@ define("cpo/modal-prompt", ["q"], function(Q) {
   /**
    * Handler which is called when the user presses "submit"
    */
-  Prompt.prototype.onSubmit = function(e) {
-    if(this.options.style === "radio") {
+  Prompt.prototype.onSubmit = function (e) {
+    if (this.options.style === "radio") {
       var retval = $("input[type='radio']:checked", this.modal).val();
-    }
-    else if(this.options.style === "text") {
+    } else if (this.options.style === "text") {
       var retval = $("input[type='text']", this.modal).val();
-    }
-    else if(this.options.style === "copyText") {
+    } else if (this.options.style === "copyText") {
       var retval = true;
-    }
-    else if(this.options.style === "confirm") {
+    } else if (this.options.style === "confirm") {
       var retval = true;
-    }
-    else {
+    } else {
       var retval = true; // Just return true if they clicked submit
     }
-    this.modal.css('display', 'none');
+    this.modal.css("display", "none");
     this.clearModal();
     this.deferred.resolve(retval);
     delete this.deferred;
     delete this.promise;
   };
 
+  window.modalPrompt = Prompt;
+
   return Prompt;
-
 });
-

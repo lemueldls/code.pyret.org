@@ -1,4 +1,4 @@
 
 define("cpo/http-imports", [], function() {
-  return { "http-imports": "true" };
-});
+  return { "http-imports": "true" }
+})

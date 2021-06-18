@@ -1,1 +1,1 @@
-define([], function() { return { path: "stub" }});
+define([], function() { return { path: "stub" }})

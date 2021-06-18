@@ -2,66 +2,56 @@
 // localStorage is made consistent with sessionStorage on page unload.
 window.localSettings = function() {
 
-  var hasLocalStorage = true;
+  var hasLocalStorage = true
   try {
-    window.localStorage;
+    window.localStorage
   }
-  catch(_) {
-    hasLocalStorage = false;
+  catch{
+    hasLocalStorage = false
   }
 
   window.addEventListener("beforeunload", function (event) {
-    Object.keys(sessionStorage).forEach(function (key) {
-      localStorage.setItem(key, sessionStorage.getItem(key));
-    });
-  });
+    for (const key of Object.keys(sessionStorage)) {
+      localStorage.setItem(key, sessionStorage.getItem(key))
+    }
+  })
 
-  var cache = new Map();
-  var listeners = new Map();
+  var cache = new Map()
+  var listeners = new Map()
 
   function change(key, f) {
-    listeners.set(key, f);
+    listeners.set(key, f)
     window.addEventListener('storage', function(e) {
-      if (e.storageArea !== localStorage) { return; }
-      cache.set(e.key, e.newValue);
+      if (e.storageArea !== localStorage) { return }
+      cache.set(e.key, e.newValue)
       if(e.key === key) {
-        f(e.oldValue, e.newValue);
+        f(e.oldValue, e.newValue)
       }
-    });
+    })
   }
 
   function get(key) {
-    if(hasLocalStorage) {
-      return localStorage.getItem(key);
-    }
-    else {
-      return undefined;
-    }
+    return hasLocalStorage ? localStorage.getItem(key) : undefined
   }
 
   function set(key, value) {
-    if(hasLocalStorage) {
-      return localStorage.setItem(key, value);
-    }
-    else {
-      return undefined;
-    }
+    return hasLocalStorage ? localStorage.setItem(key, value) : undefined
   }
   return {
     change: change,
     getItem: function (key) {
       if (!cache.has(key)) {
-        var value = get(key);
-        if (value) { cache.set(key, value.toString()); }
-        return value;
+        var value = get(key)
+        if (value) { cache.set(key, value.toString()) }
+        return value
       } else {
-        return cache.get(key);
+        return cache.get(key)
       }
     },
     setItem: function (key, value) {
-      var oldValue = cache.get(key);
-      set(key, value);
-      if(listeners.has(key)) {listeners.get(key)(oldValue, value.toString());}
+      var oldValue = cache.get(key)
+      set(key, value)
+      if(listeners.has(key)) {listeners.get(key)(oldValue, value.toString())}
     }
-  };
-}();
+  }
+}()

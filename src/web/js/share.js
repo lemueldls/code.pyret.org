@@ -1,10 +1,9 @@
 window.makeShareAPI = function makeShareAPI(pyretVersion) {
-
   var showingNeedingHidden = [];
   function hideAllHovers() {
-    showingNeedingHidden.forEach(function(hideIt) {
+    for (const hideIt of showingNeedingHidden) {
       hideIt();
-    });
+    }
   }
   /*
   function makeHoverMenu(triggerElt, menuElt, showOnHover, onShow) {
@@ -62,9 +61,13 @@ window.makeShareAPI = function makeShareAPI(pyretVersion) {
   $(".menuButton a").click(hideAllHovers);
 
   function makeShareLink(originalFile) {
-    var link = $('<button aria-label="Publish, F9" aria-describedby="mhelp-menus mhelp-activate mhelp-escape" class="focusable blueButton" role="menuitem" tabindex="-1">').text("Publish");
+    var link = $(
+      '<button aria-label="Publish, F9" aria-describedby="mhelp-menus mhelp-activate mhelp-escape" class="focusable blueButton" role="menuitem" tabindex="-1">'
+    ).text("Publish");
     var shareDiv = $("<div>").addClass("share");
-    link.click(function() { showShares(shareDiv, originalFile); });
+    link.click(function () {
+      showShares(shareDiv, originalFile);
+    });
     return link;
   }
 
@@ -76,83 +79,95 @@ window.makeShareAPI = function makeShareAPI(pyretVersion) {
         submitText: "Publish",
         options: [
           {
-            message: "This program has not been shared before.  Publishing it by clicking below will make a new copy of the file that you can share with anyone you like.  They will be able to see your code and run your program."
+            message:
+              "This program has not been shared before.  Publishing it by clicking below will make a new copy of the file that you can share with anyone you like.  They will be able to see your code and run your program.",
+          },
+        ],
+      });
+      newShare
+        .show()
+        .then(function (confirmed) {
+          if (confirmed === true) {
+            window.CPO.save().then(function (p) {
+              window.stickMessage("Copying...");
+              var copy = p.makeShareCopy();
+              copy.fail(function (error) {
+                window.flashError("Couldn't copy the file for sharing.");
+                //showshares(container, originalfile);
+              });
+              copy.then(function (f) {
+                window.flashMessage("File published successfully");
+                return showShares(container, originalFile);
+              });
+            });
           }
-        ]
-      });
-      newShare.show().then(function(confirmed) {
-        if(confirmed === true) {
-          window.CPO.save().then(function(p) {
-            window.stickMessage("Copying...");
-            var copy = p.makeShareCopy();
-            copy.fail(function(err) {
-              window.flashError("Couldn't copy the file for sharing.");
-              //showshares(container, originalfile);
-            });
-            copy.then(function(f) {
-              window.flashMessage("File published successfully");
-              return showShares(container, originalFile);
-            });
-          });
-        }
-      })
-      .fail(function(err) {
-        console.error("Error showing the share dialog", err);
-      });
+        })
+        .fail(function (error) {
+          console.error("Error showing the share dialog", error);
+        });
     }
     function showExistingSharePrompt(instances) {
       var f = instances[0];
       var shareUrl = makeShareUrl(f.getUniqueId());
       var importLetter = getImportLetter(f.getName()[0]);
-      var importCode = "import shared-gdrive(\"" + f.getName() +
-          "\", \"" + f.getUniqueId() + "\") as " + importLetter;
+      var importCode =
+        'import shared-gdrive("' +
+        f.getName() +
+        '", "' +
+        f.getUniqueId() +
+        '") as ' +
+        importLetter;
       var reshare = new modalPrompt({
         title: "Share or update the published copy",
         style: "copyText",
         submitText: "Update",
         options: [
           {
-            message: "You can copy the link below to share the most recently published version with others.",
-            text: shareUrl
+            message:
+              "You can copy the link below to share the most recently published version with others.",
+            text: shareUrl,
           },
           {
-            message: "You can copy the code below to use the published version as a library.",
-            text: importCode
+            message:
+              "You can copy the code below to use the published version as a library.",
+            text: importCode,
           },
           {
-            message: "You can also click Update below to copy the current version to the published version, or click Close to exit this window."
-          }
-        ]
+            message:
+              "You can also click Update below to copy the current version to the published version, or click Close to exit this window.",
+          },
+        ],
       });
-      reshare.show(function(republish) {
-        if(republish) {
-          window.CPO.save().then(function(p) {
+      reshare.show(function (republish) {
+        if (republish) {
+          window.CPO.save().then(function (p) {
             window.stickMessage("Republishing file...");
-            p.getContents().then(function(contents) {
-              var saved = instances[0].save(contents, false);
-              saved.fail(function(err) {
-                window.flashError("Couldn't publish the file.");
+            p.getContents()
+              .then(function (contents) {
+                var saved = instances[0].save(contents, false);
+                saved.fail(function (error) {
+                  window.flashError("Couldn't publish the file.");
+                });
+                saved.then(function (f) {
+                  window.flashMessage("Published program updated.");
+                });
+              })
+              .fail(function () {
+                window.flashError(
+                  "Couldn't get the file contents for publishing"
+                );
               });
-              saved.then(function(f) {
-                window.flashMessage("Published program updated.")
-              });
-            })
-            .fail(function() {
-              window.flashError("Couldn't get the file contents for publishing");
-            });
           });
-        }
-        else {
+        } else {
           // do nothing, user clicked "cancel", so just let the window close
         }
       });
     }
     var shares = originalFile.getShares();
-    shares.then(function(sharedInstances) {
-      if(sharedInstances.length === 0) {
+    shares.then(function (sharedInstances) {
+      if (sharedInstances.length === 0) {
         showNewSharePrompt();
-      }
-      else {
+      } else {
         showExistingSharePrompt(sharedInstances);
       }
     });
@@ -160,7 +175,7 @@ window.makeShareAPI = function makeShareAPI(pyretVersion) {
 
   function makeShareUrl(id) {
     var localShareUrl = "/editor#share=" + id;
-    if(pyretVersion !== "") {
+    if (pyretVersion !== "") {
       localShareUrl += "&v=" + pyretVersion;
     }
     return window.location.origin + localShareUrl;
@@ -168,32 +183,28 @@ window.makeShareAPI = function makeShareAPI(pyretVersion) {
 
   function getImportLetter(letter) {
     var maybeUpcase = letter.toUpperCase();
-    var isUppercaseAlpha = !!/[A-Z]/.exec(maybeUpcase);
-    if(isUppercaseAlpha) {
-      return maybeUpcase;
-    }
-    else {
-      return "M";
-    }
+    var isUppercaseAlpha = !!/[A-Z]/.test(maybeUpcase);
+    return isUppercaseAlpha ? maybeUpcase : "M";
   }
 
   function autoHighlightBox(text) {
     var textBox = $("<input type='text'>").addClass("auto-highlight");
     textBox.attr("size", text.length);
     textBox.attr("editable", false);
-    textBox.on("focus", function() { $(this).select(); });
-    textBox.on("mouseup", function() { $(this).select(); });
+    textBox.on("focus", function () {
+      $(this).select();
+    });
+    textBox.on("mouseup", function () {
+      $(this).select();
+    });
     textBox.val(text);
     return textBox;
   }
 
   function getLanguage() {
-    if(typeof navigator !== "undefined") {
-      return navigator.language || "en-US"; // Biased towards USA
-    }
-    else {
-      return "en-US";
-    }
+    return typeof navigator !== "undefined"
+      ? navigator.language || "en-US"
+      : "en-US";
   }
 
   var dateOptions = {
@@ -202,41 +213,53 @@ window.makeShareAPI = function makeShareAPI(pyretVersion) {
     month: "short",
     day: "numeric",
     hour: "numeric",
-    minute: "numeric"
+    minute: "numeric",
   };
 
   function drawShareRow(f) {
     var container = $("<div>").addClass("sharebox");
     var shareUrl = makeShareUrl(f.getUniqueId());
-    var displayDate = new Date(f.getModifiedTime()).toLocaleString(getLanguage, dateOptions);
+    var displayDate = new Date(f.getModifiedTime()).toLocaleString(
+      getLanguage,
+      dateOptions
+    );
     var hoverDate = String(new Date(f.getModifiedTime()));
     container.append($("<label>").text(displayDate).attr("alt", hoverDate));
-    var shareLink = $("<a href='javascript:void()'>").text("(Share Link)").addClass("copy-link");
-    var importLink = $("<a href='javascript:void()'>").text("(Import Code)").addClass("copy-link");
+    var shareLink = $("<a href='javascript:void()'>")
+      .text("(Share Link)")
+      .addClass("copy-link");
+    var importLink = $("<a href='javascript:void()'>")
+      .text("(Import Code)")
+      .addClass("copy-link");
     container.append(shareLink);
     container.append(importLink);
     function showCopyText(title, text) {
-      var linkDiv = $("<div>").css({"z-index": 15000});
+      var linkDiv = $("<div>").css({ zIndex: 15_000 });
       linkDiv.dialog({
         title: title,
         modal: true,
-			  overlay : { opacity: 0.5, background: 'black'},
-        width : "70%",
-        height : "auto",
-        closeOnEscape : true
+        overlay: { opacity: 0.5, background: "black" },
+        width: "70%",
+        height: "auto",
+        closeOnEscape: true,
       });
       var box = autoHighlightBox(text);
       linkDiv.append(box);
       box.focus();
     }
-    shareLink.click(function() {
+    shareLink.click(function () {
       showCopyText("Copy Share Link", shareUrl);
     });
 
     var importLetter = getImportLetter(f.getName()[0]);
-    var importCode = "import shared-gdrive(\"" + f.getName() +
-        "\", \"" + f.getUniqueId() + "\") as " + importLetter;
-    importLink.click(function() {
+    var importCode =
+      'import shared-gdrive("' +
+      f.getName() +
+      '", "' +
+      f.getUniqueId() +
+      '") as ' +
+      importLetter;
+    importLink.click(function () {
       showCopyText("Copy Import Code", importCode);
     });
     return container;
@@ -245,7 +268,6 @@ window.makeShareAPI = function makeShareAPI(pyretVersion) {
   return {
     makeShareLink: makeShareLink,
     //makeHoverMenu: makeHoverMenu,
-    makeShareUrl: makeShareUrl
+    makeShareUrl: makeShareUrl,
   };
-
-}
+};

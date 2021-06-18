@@ -6,24 +6,24 @@ function createSheetsAPI(immediate) {
   function createAPI(spreadsheets) {
 
     // Easy toggling
-    var _COLUMNS_ONE_INDEXED = true;
+    var _COLUMNS_ONE_INDEXED = true
 
     const SHEET_REQ_FIELDS = (function(){
-      var sheetData = "data(";
+      var sheetData = "data("
       // Worksheet data
-      sheetData += "rowData(values(effectiveFormat/numberFormat,effectiveValue,formattedValue))";
+      sheetData += "rowData(values(effectiveFormat/numberFormat,effectiveValue,formattedValue))"
       // Wishful thinking
-      sheetData += ",startColumn,startRow)";
-      var sheetProperties = "properties(";
+      sheetData += ",startColumn,startRow)"
+      var sheetProperties = "properties("
       // Grid Properties
-      sheetProperties += "gridProperties(columnCount,frozenColumnCount,frozenRowCount,rowCount)";
+      sheetProperties += "gridProperties(columnCount,frozenColumnCount,frozenRowCount,rowCount)"
       // Worksheet title, etc.
-      sheetProperties += ",index,sheetId,title)";
-      var sheets = "sheets(" + [sheetData,sheetProperties].join(",") + ")";
+      sheetProperties += ",index,sheetId,title)"
+      var sheets = "sheets(" + [sheetData,sheetProperties].join(",") + ")"
       return ["properties(defaultFormat,title)",
-              sheets,
-              "spreadsheetId"].join(',');
-    })();
+        sheets,
+        "spreadsheetId"].join(',')
+    })()
     
     /**
      * Creates a new Google Sheets Error
@@ -33,15 +33,15 @@ function createSheetsAPI(immediate) {
      */
     function SheetsError(message, extra) {
       if (typeof Error.captureStackTrace === 'function') {
-        Error.captureStackTrace(this, this.constructor);
+        Error.captureStackTrace(this, this.constructor)
       }
-      this.name = this.constructor.name;
-      this.message = message || "";
-      this.extra = extra || {};
+      this.name = this.constructor.name
+      this.message = message || ""
+      this.extra = extra || {}
     }
-    SheetsError.prototype = Object.create(Error.prototype);
-    SheetsError.prototype.name = "SheetsError";
-    SheetsError.prototype.constructor = SheetsError;
+    SheetsError.prototype = Object.create(Error.prototype)
+    SheetsError.prototype.name = "SheetsError"
+    SheetsError.prototype.constructor = SheetsError
 
     /**
      * Takes a column and, if it is a numeric index,
@@ -50,17 +50,17 @@ function createSheetsAPI(immediate) {
     function colAsString(col) {
       if (!isNaN(col)) {
         // http://stackoverflow.com/questions/181596/how-to-convert-a-column-number-eg-127-into-an-excel-column-eg-aa
-        var out = '';
+        var out = ''
         while(col > 0) {
-          var modulo = (col - (_COLUMNS_ONE_INDEXED ? 1 : 0)) % 26;
-          out = String.fromCharCode(65 + modulo) + out;
-          col = Math.floor((col - modulo) / 26);
+          var modulo = (col - (_COLUMNS_ONE_INDEXED ? 1 : 0)) % 26
+          out = String.fromCharCode(65 + modulo) + out
+          col = Math.floor((col - modulo) / 26)
         }
-        return out;
+        return out
       } else if (typeof col !== 'string'){
-        throw new SheetsError("Invalid column: " + (col ? col.toString() : col));
+        throw new SheetsError("Invalid column: " + (col ? col.toString() : col))
       } else {
-        return col;
+        return col
       }
     }
 
@@ -70,17 +70,17 @@ function createSheetsAPI(immediate) {
     function colAsNumber(col) {
       if (typeof col === 'string') {
         // https://github.com/python-excel/xlwt/blob/master/xlwt/Utils.py
-        var colNum = 0;
-        var power = 1;
-        for (var i = col.length - 1; i >= 0; --i) {
-          colNum += (col.charCodeAt(i) - 65 + 1) * power;
-          power *= 26;
+        var colNumber = 0
+        var power = 1
+        for (var index = col.length - 1; index >= 0; --index) {
+          colNumber += (col.charCodeAt(index) - 65 + 1) * power
+          power *= 26
         }
-        return colNum - (_COLUMNS_ONE_INDEXED ? 1 : 0);
+        return colNumber - (_COLUMNS_ONE_INDEXED ? 1 : 0)
       } else if (isNaN(col)) {
-        throw new SheetsError("Invalid column: " + (col ? col.toString() : col));
+        throw new SheetsError("Invalid column: " + (col ? col.toString() : col))
       } else {
-        return col;
+        return col
       }
     }
 
@@ -89,13 +89,13 @@ function createSheetsAPI(immediate) {
      */
     function makeRange(title, fromCol, fromRow, toCol, toRow) {
       if (fromCol === toCol) {
-        fromCol = colAsString(fromCol);
-        toCol = fromCol;
+        fromCol = colAsString(fromCol)
+        toCol = fromCol
       } else {
-        fromCol = colAsString(fromCol);
-        toCol = colAsString(toCol);
+        fromCol = colAsString(fromCol)
+        toCol = colAsString(toCol)
       }
-      return title + "!" + fromCol + fromRow + ":" + toCol + toRow;
+      return title + "!" + fromCol + fromRow + ":" + toCol + toRow
     }
 
     const VALUE_TYPES = {
@@ -103,7 +103,7 @@ function createSheetsAPI(immediate) {
       NUMBER: 2,
       BOOL: 3,
       NONE: 4
-    };
+    }
 
     /**
      * Reads in the raw row data from the spreadsheet and
@@ -122,89 +122,89 @@ function createSheetsAPI(immediate) {
      *        doesn't log any type errors for other columns)
      */
     function unifyRows(rowData, skipHeaders, onlyInfer) {
-      var errors = [];
+      var errors = []
       // Schemas of individual rows
-      var rowSchemas = [];
+      var rowSchemas = []
       // Unified table schema
-      var schema = [];
+      var schema = []
       // What column does the data start at?
-      var startCol = Infinity;
-      var endCol = 0;
-      var startRow = 0;
+      var startCol = Number.POSITIVE_INFINITY
+      var endCol = 0
+      var startRow = 0
 
-      function processValue(v, idx) {
+      function processValue(v, index) {
         if (!v) {
-          throw new SheetsError("Internal Error: unifyRows called with no value");
+          throw new SheetsError("Internal Error: unifyRows called with no value")
         } else if (!v.effectiveValue) {
           // Empty entry
-          return { value: null, type: VALUE_TYPES.NONE };
+          return { value: null, type: VALUE_TYPES.NONE }
         }
 
         // We have an entry; update the start column if needed
-        startCol = Math.min(startCol, idx);
-        endCol = Math.max(endCol, idx);
+        startCol = Math.min(startCol, index)
+        endCol = Math.max(endCol, index)
 
         if (v.effectiveValue.numberValue !== undefined) {
           var format = v.effectiveFormat
                 && v.effectiveFormat.numberFormat
-                && v.effectiveFormat.numberFormat.type;
-          var asStr = v.formattedValue
-                || v.effectiveValue.numberValue.toString();
+                && v.effectiveFormat.numberFormat.type
+          var asString = v.formattedValue
+                || v.effectiveValue.numberValue.toString()
 
           switch(format) {
           // For these formats, use string representation for now.
             // TODO: Make a datetime type for these 
-          case "TEXT":
-          case "DATE":
-          case "TIME":
-          case "DATE_TIME":
-            return { value: asStr, type: VALUE_TYPES.STRING };
-          default:
-            return { value: v.effectiveValue.numberValue, type: VALUE_TYPES.NUMBER };
+            case "TEXT":
+            case "DATE":
+            case "TIME":
+            case "DATE_TIME":
+              return { value: asString, type: VALUE_TYPES.STRING }
+            default:
+              return { value: v.effectiveValue.numberValue, type: VALUE_TYPES.NUMBER }
           }
         } else if (v.effectiveValue.boolValue !== undefined) {
-          return { value: v.effectiveValue.boolValue, type: VALUE_TYPES.BOOL };
+          return { value: v.effectiveValue.boolValue, type: VALUE_TYPES.BOOL }
         } else if (v.effectiveValue.errorValue) {
           if(v.effectiveValue.errorValue.type === "N_A") {
-            errors.push("Google Sheets Error: there are #N/A values in the sheet, so it cannot be loaded correctly. The #N/A values must first be fixed before importing.");
+            errors.push("Google Sheets Error: there are #N/A values in the sheet, so it cannot be loaded correctly. The #N/A values must first be fixed before importing.")
           }
           else {
-            errors.push("Google Sheets Error: " + v.effectiveValue.errorValue);
+            errors.push("Google Sheets Error: " + v.effectiveValue.errorValue)
           }
-          return { value: null, type: VALUE_TYPES.NONE };
+          return { value: null, type: VALUE_TYPES.NONE }
         } else {
-          return { value: v.formattedValue, type: VALUE_TYPES.STRING };
+          return { value: v.formattedValue, type: VALUE_TYPES.STRING }
         }
       }
 
       // Unzips the results of processValue
-      function extractRowSchema(row, rowNum) {
-        return row.reduce(function(acc, cur, idx){
-          acc.values.push(cur.value);
-          acc.schema.push(
-            { type: cur.type,
-              isOption: (cur.type === VALUE_TYPES.NONE),
-              trueRow: rowNum,
-              trueCol: idx });
-          return acc;
-        }, { values: [], schema: []});
+      function extractRowSchema(row, rowNumber) {
+        return row.reduce(function(accumulator, current, index__){
+          accumulator.values.push(current.value)
+          accumulator.schema.push(
+            { type: current.type,
+              isOption: (current.type === VALUE_TYPES.NONE),
+              trueRow: rowNumber,
+              trueCol: index__ })
+          return accumulator
+        }, { values: [], schema: []})
       }
 
       // Type -> String
       function typeName(t) {
         switch(t) {
-        case VALUE_TYPES.STRING:
-          return "String";
-          break;
-        case VALUE_TYPES.NUMBER:
-          return "Number";
-          break;
-        case VALUE_TYPES.BOOL:
-          return "Bool";
-          break;
-        case VALUE_TYPES.NONE:
-        default: // <- to make linters be quiet
-          return "Option";
+          case VALUE_TYPES.STRING:
+            return "String"
+            break
+          case VALUE_TYPES.NUMBER:
+            return "Number"
+            break
+          case VALUE_TYPES.BOOL:
+            return "Bool"
+            break
+          case VALUE_TYPES.NONE:
+          default: // <- to make linters be quiet
+            return "Option"
         }
       }
 
@@ -212,114 +212,114 @@ function createSheetsAPI(immediate) {
       function unifySchemas(schema1, schema2, row, index) {
         function logFail() {
           if (onlyInfer && !onlyInfer.includes(schema2.trueCol)) {
-            return;
+            return
           }
-          var trueRow = schema2.trueRow;
-          var trueCol = schema2.trueCol;
+          var trueRow = schema2.trueRow
+          var trueCol = schema2.trueCol
 
-          var data = rowData[row][index];
+          var data = rowData[row][index]
           // Surround in quotes for error message clarity
           if (typeof data === "string") {
-            data = '"' + data + '"';
+            data = '"' + data + '"'
           }
           var error = "All items in every column must have the same type. "
                       + "We expected to find a " + typeName(schema1.type)
                       + " at cell " + colAsString(trueCol + 1) + (trueRow + 1)
                       + ", but we instead found this " + typeName(schema2.type)
-                      + ": " + data + ".";
+                      + ": " + data + "."
           if ((schema1.type === VALUE_TYPES.STRING && schema2.type === VALUE_TYPES.NUMBER)
               || (schema1.type === VALUE_TYPES.NUMBER && schema2.type === VALUE_TYPES.STRING)) {
             error += " If you want some Numbers to be read as Strings, you need to format those cells "
               + "in Google Sheets as \"Plain Text\" (Select the cells, click \"Format\", then click \"Number\""
-              + ", and then click \"Plain Text\").";
+              + ", and then click \"Plain Text\")."
           }
-          errors.push(error);
+          errors.push(error)
         }
         if (!schema1) { // (T-INTROS)
-          return schema2;
+          return schema2
         } else if (schema1.type === VALUE_TYPES.NONE) {
           if (schema2.type === VALUE_TYPES.NONE) { // (T-NONE)
-            return schema1;
+            return schema1
           } else { // (T-OPTION-1)
-            schema2.isOption = true;
-            return schema2;
+            schema2.isOption = true
+            return schema2
           }
         } else if (schema1.isOption) { // (T-OPTION-3)
           if (schema2.type === VALUE_TYPES.NONE || schema2.type === schema1.type) {
-            return schema1;
+            return schema1
           } else { // (T-ERROR-1)
-            logFail();
+            logFail()
             // Continue to expect accumulated schema
-            return schema1;
+            return schema1
           }
         } else if (schema2.type === VALUE_TYPES.NONE) { // (T-OPTION-2)
-          schema1.isOption = true;
-          return schema1;
+          schema1.isOption = true
+          return schema1
         } else if (schema1.type === schema2.type) { // (T-CHECK)
-          return schema1;
+          return schema1
         } else { // (T-ERROR-2)
-          logFail();
+          logFail()
           // Continue to expect accumulated schema
-          return schema1;
+          return schema1
         }
       }
 
-      var foundFirstRow = false;
-      var foundHeaders = false;
-      var emptyRows = [];
-      rowData = rowData.map(function(row, rowNum) {
+      var foundFirstRow = false
+      var foundHeaders = false
+      var emptyRows = []
+      rowData = rowData.map(function(row, rowNumber) {
         if (row.values
             && (row.values.length > 0)
-            && (row.values.some(function(v){return v.effectiveValue !== undefined;}))) {
+            && (row.values.some(function(v){return v.effectiveValue !== undefined}))) {
           if (!foundHeaders && skipHeaders) {
-            foundHeaders = true;
-            startRow += 1;
-            rowSchemas.push([]);
-            return [];
+            foundHeaders = true
+            startRow += 1
+            rowSchemas.push([])
+            return []
           }
-          foundFirstRow = true;
-          var extracted = extractRowSchema(row.values.map(processValue), rowNum);
-          row.values = extracted.values;
-          rowSchemas.push(extracted.schema);
-          return row.values;
+          foundFirstRow = true
+          var extracted = extractRowSchema(row.values.map(processValue), rowNumber)
+          row.values = extracted.values
+          rowSchemas.push(extracted.schema)
+          return row.values
         } else if (!foundFirstRow) {
-          startRow += 1;
+          startRow += 1
         } else {
-          emptyRows.push(rowNum);
+          emptyRows.push(rowNumber)
         }
-        rowSchemas.push([]);
-        return [];
-      });
+        rowSchemas.push([])
+        return []
+      })
       // Remove empty rows (reverse order to preserve index locations)
-      for (var i = emptyRows.length - 1; i >= 0; --i) {
-        rowData.splice(emptyRows[i], 1);
-        rowSchemas.splice(emptyRows[i], 1);
+      for (var index = emptyRows.length - 1; index >= 0; --index) {
+        rowData.splice(emptyRows[index], 1)
+        rowSchemas.splice(emptyRows[index], 1)
       }
-      rowData.splice(0, startRow);
-      rowSchemas.splice(0, startRow);
-      var tableWidth = (endCol - startCol) + 1;
+      rowData.splice(0, startRow)
+      rowSchemas.splice(0, startRow)
+      var tableWidth = (endCol - startCol) + 1
       // Trim/pad remaining rows to uniform shape
-      for (var i = 0; i < rowData.length; ++i) {
+      for (var index = 0; index < rowData.length; ++index) {
         // Trim off any leading columns
-        rowData[i] = rowData[i].slice(startCol, endCol + 1);
-        rowSchemas[i] = rowSchemas[i].slice(startCol, endCol + 1);
+        rowData[index] = rowData[index].slice(startCol, endCol + 1)
+        rowSchemas[index] = rowSchemas[index].slice(startCol, endCol + 1)
         // Pad out any missing trailing columns
-        for (var j = rowData[i].length; j < tableWidth; ++j) {
-          rowData[i][j] = null;
-          rowSchemas[i].push({ type: VALUE_TYPES.NONE, isOption: false });
+        for (var index_ = rowData[index].length; index_ < tableWidth; ++index_) {
+          rowData[index][index_] = null
+          rowSchemas[index].push({ type: VALUE_TYPES.NONE, isOption: false })
         }
       }
       // Unify schemas
-      for (var i = 0; i < rowSchemas.length; ++i) {
-        for (var j = 0; j < Math.max(schema.length, rowSchemas[i].length); ++j) {
-          schema[j] = unifySchemas(schema[j], rowSchemas[i][j], i, j);
+      for (var index = 0; index < rowSchemas.length; ++index) {
+        for (var index_ = 0; index_ < Math.max(schema.length, rowSchemas[index].length); ++index_) {
+          schema[index_] = unifySchemas(schema[index_], rowSchemas[index][index_], index, index_)
         }
       }
-      var ret = { values: rowData, schema: schema, startCol: startCol };
+      var returnValue = { values: rowData, schema: schema, startCol: startCol }
       if (errors.length > 0) {
-        ret.errors = errors;
+        returnValue.errors = errors
       }
-      return ret;
+      return returnValue
     }
 
     /**
@@ -330,14 +330,14 @@ function createSheetsAPI(immediate) {
               this spreadsheet.
      */
     function Spreadsheet(data) {
-      this.id = data.spreadsheetId;
-      this.title = data.properties.title;
-      this.defaultFormat = data.properties.defaultFormat || {};
-      data.sheets = data.sheets || [];
-      this.worksheetsInfo = [];
+      this.id = data.spreadsheetId
+      this.title = data.properties.title
+      this.defaultFormat = data.properties.defaultFormat || {}
+      data.sheets = data.sheets || []
+      this.worksheetsInfo = []
       this.worksheets = data.sheets.map(function(wsdata) {
-        return new Worksheet(this, wsdata);
-      }, this);
+        return new Worksheet(this, wsdata)
+      }, this)
     }
 
     /**
@@ -346,33 +346,33 @@ function createSheetsAPI(immediate) {
      * @param {string} name - The name of the worksheet to look up
      */
     Spreadsheet.prototype.lookupInfoByName = function(name) {
-      var worksheetIdx = -1;
-      for (var i = 0; i < this.worksheetsInfo.length; ++i) {
-        var info = this.worksheetsInfo[i];
+      var worksheetIndex = -1
+      for (var index = 0; index < this.worksheetsInfo.length; ++index) {
+        var info = this.worksheetsInfo[index]
         if (info.properties.title === name) {
-          worksheetIdx = i;
-          break;
+          worksheetIndex = index
+          break
         }
       }
-      if (worksheetIdx === -1) {
-        throw new SheetsError("No worksheet with name \"" + name + "\"");
+      if (worksheetIndex === -1) {
+        throw new SheetsError("No worksheet with name \"" + name + "\"")
       } else {
-        return this.worksheetsInfo[worksheetIdx];
+        return this.worksheetsInfo[worksheetIndex]
       }
-    };
+    }
 
     /**
      * Internal method for looking up worksheet information
      * via the index of the worksheet.
      * @param {number} worksheetIdx - The index of the worksheet to look up
      */
-    Spreadsheet.prototype.lookupInfoByIndex = function(worksheetIdx) {
-      if (worksheetIdx >= this.worksheetsInfo.length) {
-        throw new SheetsError("No worksheet with index " + worksheetIdx + "");
+    Spreadsheet.prototype.lookupInfoByIndex = function(worksheetIndex) {
+      if (worksheetIndex >= this.worksheetsInfo.length) {
+        throw new SheetsError("No worksheet with index " + worksheetIndex + "")
       } else {
-        return this.worksheetsInfo[worksheetIdx];
+        return this.worksheetsInfo[worksheetIndex]
       }
-    };
+    }
 
     /**
      * Returns the worksheet in this spreadsheet at the specified
@@ -383,13 +383,13 @@ function createSheetsAPI(immediate) {
      * @param {integer[]} [onlyInfer] - If given, will only perform type inference
      *        on the given columns (i.e. does not report type errors on other columns)
      */
-    Spreadsheet.prototype.getByIndex = function(worksheetIdx, skipHeaders, onlyInfer) {
+    Spreadsheet.prototype.getByIndex = function(worksheetIndex, skipHeaders, onlyInfer) {
       // Performs validation on index
-      this.lookupInfoByIndex(worksheetIdx);
-      var ret = this.worksheets[worksheetIdx];
-      ret.init(skipHeaders, onlyInfer);
-      return ret;
-    };
+      this.lookupInfoByIndex(worksheetIndex)
+      var returnValue_ = this.worksheets[worksheetIndex]
+      returnValue_.init(skipHeaders, onlyInfer)
+      return returnValue_
+    }
 
     /**
      * Returns the worksheet in this spreadsheet with the
@@ -401,11 +401,11 @@ function createSheetsAPI(immediate) {
      *        on the given columns (i.e. does not report type errors on other columns)
      */
     Spreadsheet.prototype.getByName = function(name, skipHeaders, onlyInfer) {
-      var info = this.lookupInfoByName(name);
-      var ret = this.worksheets[info.properties.index];
-      ret.init(skipHeaders, onlyInfer);
-      return ret;
-    };
+      var info = this.lookupInfoByName(name)
+      var returnValue = this.worksheets[info.properties.index]
+      returnValue.init(skipHeaders, onlyInfer)
+      return returnValue
+    }
 
     /**
      * Adds a worksheet to this spreadsheet with the given title
@@ -417,9 +417,9 @@ function createSheetsAPI(immediate) {
     Spreadsheet.prototype.addWorksheet = function(name, index) {
       var request = {addSheet:
                      {properties:
-                      {title: name}}};
+                      {title: name}}}
       if (index !== undefined) {
-        request.addSheet.properties.index = index;
+        request.addSheet.properties.index = index
       }
       return spreadsheets.batchUpdate({
         spreadsheetId: this.id,
@@ -432,24 +432,21 @@ function createSheetsAPI(immediate) {
             spreadsheetId: this.id,
             ranges: name,
             fields: SHEET_REQ_FIELDS
-          });}).bind(this))
+          })}).bind(this))
         .then((function(data) {
           if (!data.sheets || (data.sheets.length === 0)) {
-            throw new SheetsError("Failed to add worksheet: \"" + name + "\"");
+            throw new SheetsError("Failed to add worksheet: \"" + name + "\"")
           }
-          var ret = new Worksheet(this, data.sheets[0]);
-          ret.init(false);
-          return ret;
+          var returnValue = new Worksheet(this, data.sheets[0])
+          returnValue.init(false)
+          return returnValue
         }).bind(this))
-        .fail(function(err) {
-          if (err.message && /already exists/.test(err.message)) {
-            throw new SheetsError("A sheet with name \"" + name + "\""
-                                  + " already exists in this spreadsheet.");
-          } else {
-            throw err;
-          }
-        });
-    };
+        .fail(function(error_) {
+          const error = error_.message && /already exists/.test(error_.message) ? new SheetsError("A sheet with name \"" + name + "\""
+                                  + " already exists in this spreadsheet.") : error_
+          throw error
+        })
+    }
 
     /**
      * Internal method for deleting worksheets
@@ -462,16 +459,13 @@ function createSheetsAPI(immediate) {
           requests: [{deleteSheet: {sheetId: id}}]
         }
       })
-      .then(function(_) { return true; })
-      .fail(function(err) {
-               if (err.message && /sheet with ID.*does not exist/.test(err.message)) {
-                 throw new SheetsError("A sheet with ID \"" + id + "\" "
-                                       + "does not exist in this spreadsheet.");
-               } else {
-                 throw err;
-               }
-      });
-    };
+        .then(function(_) { return true })
+        .fail(function(error_) {
+          const error = error_.message && /sheet with ID.*does not exist/.test(error_.message) ? new SheetsError("A sheet with ID \"" + id + "\" "
+                                       + "does not exist in this spreadsheet.") : error_
+          throw error
+        })
+    }
 
     /**
      * Deletes the worksheet from this spreadsheet with
@@ -480,25 +474,22 @@ function createSheetsAPI(immediate) {
      */
     Spreadsheet.prototype.deleteSheetByName = function(name) {
       return this.deleteSheetById(this.lookupInfoByName(name).properties.sheetId)
-        .fail(function(err) {
-           if (err.message && /does not exist in this spreadsheet/.test(err.message)) {
-               throw new SheetsError(
-                   err.message.replace(/ID "[^"]*"/, "name \"" + name + "\""));
-             } else {
-               throw err;
-             }
-        });
-    };
+        .fail(function(error_) {
+          const error = error_.message && /does not exist in this spreadsheet/.test(error_.message) ? new SheetsError(
+            error_.message.replace(/ID "[^"]*"/, "name \"" + name + "\"")) : error_
+          throw error
+        })
+    }
 
     /**
      * Deletes the worksheet from this spreadsheet at
      * the given index
      * @param {number} idx - The index of the sheet to delete
      */
-    Spreadsheet.prototype.deleteSheetByIndex = function(idx) {
+    Spreadsheet.prototype.deleteSheetByIndex = function(index) {
       // lookupInfoByIndex does error handling
-      return this.deleteSheetById(this.lookupInfoByIndex(idx).properties.sheetId);
-    };
+      return this.deleteSheetById(this.lookupInfoByIndex(index).properties.sheetId)
+    }
 
     /**
      * Constructs a new Worksheet object, representing
@@ -510,32 +501,32 @@ function createSheetsAPI(immediate) {
     function Worksheet(spreadsheet, data) {
       if (!data) {
         throw new SheetsError("Worksheet: Internal Error: No data. "
-                              + "Please report this error to the developers.");
+                              + "Please report this error to the developers.")
       } else if (!data.properties) {
         throw new SheetsError("Worksheet: Internal Error: No properties. "
-                              + "Please report this error to the developers.");
+                              + "Please report this error to the developers.")
       }
-      this.id = data.properties.sheetId;
-      this.title = data.properties.title;
-      this.rows = data.properties.gridProperties.rowCount;
-      this.cols = data.properties.gridProperties.columnCount;
-      this.index = data.properties.index;
-      spreadsheet.worksheetsInfo[this.index] = { properties: data.properties };
-      this.cache = [];
-      this.spreadsheet = spreadsheet;
-      this.rawData = data;
+      this.id = data.properties.sheetId
+      this.title = data.properties.title
+      this.rows = data.properties.gridProperties.rowCount
+      this.cols = data.properties.gridProperties.columnCount
+      this.index = data.properties.index
+      spreadsheet.worksheetsInfo[this.index] = { properties: data.properties }
+      this.cache = []
+      this.spreadsheet = spreadsheet
+      this.rawData = data
       this.listener = {
         handleEvent: (function(){
-          return this.flushCache(true);
+          return this.flushCache(true)
         }).bind(this)
-      };
+      }
       if (window === undefined) {
-        console.warn("No window detected. Sheets may fall out of sync.");
-        this.useTimer = false;
+        console.warn("No window detected. Sheets may fall out of sync.")
+        this.useTimer = false
       } else {
         // Sync with Google Sheets server on save
-        window.addEventListener('pyret-save', this.flushCache.bind(this), false);
-        this.useTimer = true;
+        window.addEventListener('pyret-save', this.flushCache.bind(this), false)
+        this.useTimer = true
       }
     }
 
@@ -555,45 +546,45 @@ function createSheetsAPI(immediate) {
                               + (skipHeaders ? "out" : "")
                               + " headers, but worksheet was already previously"
                               + " loaded with" + (skipHeaders ? "" : "out")
-                              + " headers.");
+                              + " headers.")
       } else if (this.data !== undefined) {
-        return;
+        return
       }
-      var data = this.rawData;
-      this.hasHeaders = !skipHeaders;
+      var data = this.rawData
+      this.hasHeaders = !skipHeaders
       if (!(data.data && data.data[0] && data.data[0].rowData)) {
-        this.data = [];
-        this.startCol = 0;
-        this.schema = [];
+        this.data = []
+        this.startCol = 0
+        this.schema = []
       } else {
-        var unified = unifyRows(data.data[0].rowData, skipHeaders, onlyInfer);
-        this.startCol = unified.startCol;
-        this.data = unified.values;
-        this.schema = unified.schema;
+        var unified = unifyRows(data.data[0].rowData, skipHeaders, onlyInfer)
+        this.startCol = unified.startCol
+        this.data = unified.values
+        this.schema = unified.schema
         // Might be undefined
-        this.typeErrors = unified.errors;
+        this.typeErrors = unified.errors
         if (!this.data) {
           throw new SheetsError("Worksheet: Internal Error: "
                                 + "Type-check yielded no values. "
-                                + "Please report this error to the developers.");
+                                + "Please report this error to the developers.")
         } else if (!this.schema) {
           throw new SheetsError("Worksheet: Internal Error: "
                                 + "Type-check yielded no schema. "
-                                + "Please report this error to the developers.");
+                                + "Please report this error to the developers.")
         }
       }
-    };
+    }
 
     /**
      * Clears this worksheet's timers (for pushing data to the server)
      */
     Worksheet.prototype.clearTimer = function() {
       if (this.useTimer && (this.timeoutId !== undefined)) {
-        window.removeEventListener("beforeunload", this.listener);
-        window.clearTimeout(this.timeoutId);
-        this.timeoutId = undefined;
+        window.removeEventListener("beforeunload", this.listener)
+        window.clearTimeout(this.timeoutId)
+        this.timeoutId = undefined
       }
-    };
+    }
 
     /**
      * Sets this worksheet's timers (for pushing data to the server).
@@ -605,11 +596,11 @@ function createSheetsAPI(immediate) {
      */
     Worksheet.prototype.resetTimer = function() {
       if (this.useTimer) {
-        this.clearTimer();
-        window.addEventListener("beforeunload", this.listener);
-        this.timeoutId = window.setTimeout(this.flushCache.bind(this), 10000);
+        this.clearTimer()
+        window.addEventListener("beforeunload", this.listener)
+        this.timeoutId = window.setTimeout(this.flushCache.bind(this), 10_000)
       }
-    };
+    }
 
     /**
      * Returns the cell at the given position in this worksheet
@@ -618,8 +609,8 @@ function createSheetsAPI(immediate) {
      */
     Worksheet.prototype.getCellAt = function(col, row) {
       return this.getCellRange(col, row, col, row)
-             .then(function(arr) { return arr[0][0]; });
-    };
+        .then(function(array) { return array[0][0] })
+    }
 
     /**
      * Sets the cell at the given position in this worksheet
@@ -627,9 +618,9 @@ function createSheetsAPI(immediate) {
      * @param {number} row - The row to set
      * @param {*} val - The value to set the cell to
      */
-    Worksheet.prototype.setCellAt = function(col, row, val) {
-      return this.setCellRange(col, row, col, row, [[val]]);
-    };
+    Worksheet.prototype.setCellAt = function(col, row, value) {
+      return this.setCellRange(col, row, col, row, [[value]])
+    }
 
     /**
      * Sets the given cell range in this worksheet
@@ -640,15 +631,15 @@ function createSheetsAPI(immediate) {
      * @param {*[][]} values - The values to set in the worksheet
      */
     Worksheet.prototype.setCellRange = function(fromCol, fromRow, toCol, toRow, values) {
-      var range = makeRange(this.title, fromCol, fromRow, toCol, toRow);
+      var range = makeRange(this.title, fromCol, fromRow, toCol, toRow)
       this.cache.push({
         range: range,
         majorDimension: "ROWS",
         values: values
-      });
-      this.resetTimer();
-      return true;
-    };
+      })
+      this.resetTimer()
+      return true
+    }
 
     /**
      * Pushes all pending changes to the Google Sheets server.
@@ -656,10 +647,10 @@ function createSheetsAPI(immediate) {
      *        (useful for pre-closing pushes)
      */
     Worksheet.prototype.flushCache = function(noRefresh) {
-      this.clearTimer();
+      this.clearTimer()
       // If we're not waiting to set anything, bail out.
       if (this.cache.length === 0) {
-        return Q(this);
+        return Q(this)
       } else {
         // We're waiting to set some values, so set them.
         var promise = spreadsheets.values.batchUpdate({
@@ -667,22 +658,22 @@ function createSheetsAPI(immediate) {
           resource: {
             data: this.cache
           }
-        });
-        this.cache = [];
+        })
+        this.cache = []
         return promise.then(noRefresh ?
-                            function(){return this;}.bind(this)
-                              : this.refresh.bind(this));
+          function(){return this}.bind(this)
+          : this.refresh.bind(this))
       }
-    };
+    }
 
     /**
      * Returns all cells in this worksheet
      */
     Worksheet.prototype.getAllCells = function() {
       return this.flushCache().then((function(){
-        return this.data;
-      }).bind(this));
-    };
+        return this.data
+      }).bind(this))
+    }
 
     /**
      * Returns the given range of cells in this worksheet (inclusive)
@@ -692,31 +683,31 @@ function createSheetsAPI(immediate) {
      * @param {number} toRow - The row to end at
      */
     Worksheet.prototype.getCellRange = function(fromCol, fromRow, toCol, toRow) {
-      fromCol = colAsNumber(fromCol);
-      toCol = colAsNumber(toCol);
+      fromCol = colAsNumber(fromCol)
+      toCol = colAsNumber(toCol)
       return this.flushCache().then((function(){
         return this.data.map((function(row) {
-          return row.slice(fromCol - this.startCol, (toCol - this.startCol) + 1);
-        }).bind(this)).slice(fromRow - 1, toRow);
-      }).bind(this));
-    };
+          return row.slice(fromCol - this.startCol, (toCol - this.startCol) + 1)
+        }).bind(this)).slice(fromRow - 1, toRow)
+      }).bind(this))
+    }
 
     /**
      * Updates the name of this worksheet to the given name
      * @param {string} name - The new name of this worksheet
      */
     Worksheet.prototype.updateName = function(name) {
-      var ret = spreadsheets.batchUpdate({
+      var returnValue = spreadsheets.batchUpdate({
         spreadsheetId: this.spreadsheet.id,
         resource: {
           requests: [
             {updateSheetProperties: {properties: {title: name}, fields: "title"}}
           ]
         }
-      });
-      ret.then((function(_) { this.title = name; }).bind(this));
-      return ret;
-    };
+      })
+      returnValue.then((function(_) { this.title = name }).bind(this))
+      return returnValue
+    }
 
     /**
      * Fetches the latest worksheet contents from the
@@ -733,14 +724,14 @@ function createSheetsAPI(immediate) {
             || !data.sheets[0].data[0]
             || !data.sheets[0].data[0].rowData) {
           throw new SheetsError("Worksheet data not returned by Google. "
-                                + "Please report this error to the developers.");
+                                + "Please report this error to the developers.")
         }
         // Re-unify
-        this.rawData = data.sheets[this.index];
-        this.init();
-        return this;
-      }).bind(this));
-    };
+        this.rawData = data.sheets[this.index]
+        this.init()
+        return this
+      }).bind(this))
+    }
 
     /**
      * Loads the spreadsheet with the given id
@@ -749,88 +740,88 @@ function createSheetsAPI(immediate) {
       return spreadsheets.get({
         spreadsheetId: id,
         fields: SHEET_REQ_FIELDS
-      }).then(function(data) { return new Spreadsheet(data); },
-              function(err) {
-                throw new SheetsError("No Spreadsheet with id \"" + id + "\" found");
-              });
-    };
+      }).then(function(data) { return new Spreadsheet(data) },
+        function(error) {
+          throw new SheetsError("No Spreadsheet with id \"" + id + "\" found")
+        })
+    }
     
     /**
      * Loads a spreadsheet from the given file object
      * @param file - A file object (as returned from `drive.js`)
      */
     Spreadsheet.fromFile = function(file) {
-      return Spreadsheet.fromId(file.getUniqueId());
-    };
+      return Spreadsheet.fromId(file.getUniqueId())
+    }
 
     return {
       createSpreadsheet: function(name) {
-        var opts = {};
-        opts.mimeType = 'application/vnd.google-apps.spreadsheet';
-        opts.fileExtension = false;
-        var ret = Q.defer();
+        var options = {}
+        options.mimeType = 'application/vnd.google-apps.spreadsheet'
+        options.fileExtension = false
+        var returnValue_ = Q.defer()
         storageAPI
           .then(function(api){
-            return api.createFile(name, opts);
+            return api.createFile(name, options)
           })
           .then(function(file) {
             return spreadsheets.get({
               spreadsheetId: file.getUniqueId()
-            });
+            })
           })
           .then(function(data) {
-            ret.resolve(new Spreadsheet(data));
+            returnValue_.resolve(new Spreadsheet(data))
           })
-          .fail(ret.reject);
-        return ret.promise;
+          .fail(returnValue_.reject)
+        return returnValue_.promise
       },
       loadSpreadsheetByName: function(name) {
         return storageAPI.then(function(api) {
-                 return api.getFileByName(name);
-               }).then(function(res) {
-                 if (res.length === 0) {
-                   throw new SheetsError("No spreadsheet named \"" + name + "\" found.");
-                 } else {
-                   return res[0];
-                 }
-               }).then(Spreadsheet.fromFile);
+          return api.getFileByName(name)
+        }).then(function(res) {
+          if (res.length === 0) {
+            throw new SheetsError("No spreadsheet named \"" + name + "\" found.")
+          } else {
+            return res[0]
+          }
+        }).then(Spreadsheet.fromFile)
       },
       loadSpreadsheetById: function(id) {
-        return Spreadsheet.fromId(id);
+        return Spreadsheet.fromId(id)
       },
       TYPES: VALUE_TYPES
-    };
+    }
   }
 
-  var ret = Q.defer();
+  var returnValue = Q.defer()
   gwrap.load({url: 'https://sheets.googleapis.com/$discovery/rest?version=v4',
-              reauth: {
-                immediate: immediate
-              },
-              callback: function(sheets) {
+    reauth: {
+      immediate: immediate
+    },
+    callback: function(sheets) {
 
-                // NOTE(joe, July 13 2017): The load interface seems to
-                // inconsistently (perhaps depending on state w/Google login?)
-                // return an array and a single value here.  The array contains
-                // both the spreadsheets API object and the Google Plus API
-                // object, which was added recently to get user emails for
-                // display.  I haven't dug into why this happens (the
-                // processDelta() function in the load API is responsible for
-                // these return values), but this fix isn't completely
-                // senseless and works.
+      // NOTE(joe, July 13 2017): The load interface seems to
+      // inconsistently (perhaps depending on state w/Google login?)
+      // return an array and a single value here.  The array contains
+      // both the spreadsheets API object and the Google Plus API
+      // object, which was added recently to get user emails for
+      // display.  I haven't dug into why this happens (the
+      // processDelta() function in the load API is responsible for
+      // these return values), but this fix isn't completely
+      // senseless and works.
 
-                if(Array.isArray(sheets)) {
-                  for(var i = 0; i < sheets.length; i += 1) {
-                    if(sheets[i].spreadsheets) {
-                      ret.resolve(createAPI(sheets[i].spreadsheets));
-                      return;
-                    }
-                  }
-                  ret.reject("Sheets could not load");
-                }
-                else {
-                  ret.resolve(createAPI(sheets.spreadsheets));
-                }
-              }});
-  return ret.promise;
+      if(Array.isArray(sheets)) {
+        for(const sheet of sheets) {
+          if(sheet.spreadsheets) {
+            returnValue.resolve(createAPI(sheet.spreadsheets))
+            return
+          }
+        }
+        returnValue.reject("Sheets could not load")
+      }
+      else {
+        returnValue.resolve(createAPI(sheets.spreadsheets))
+      }
+    }})
+  return returnValue.promise
 }

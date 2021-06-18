@@ -6,23 +6,24 @@
 // lock up the redis store for a while.  If you have thousands, it will finish
 // in about a second.  Used for counting how many folks have connected to Drive.
 
-var redis = require('redis');
-var url = require('url');
+import redis from "redis";
+import url from "node:url";
 
 var rediscloud_url = process.argv[2];
 
 var redisURL = url.parse(rediscloud_url);
 console.log(redisURL);
-var client = redis.createClient(redisURL.port, redisURL.hostname, {no_ready_check: true});
-if(redisURL.auth) {
+var client = redis.createClient(redisURL.port, redisURL.hostname, {
+  no_ready_check: true,
+});
+if (redisURL.auth) {
   client.auth(redisURL.auth.split(":")[1]);
 }
 
-client.keys('*', function (err, keys) {
-  if (err) return console.log(err);
+client.keys("*", function (error, keys) {
+  if (error) return console.log(error);
 
-  for(var i = 0, len = keys.length; i < len; i++) {
-    console.log(keys[i]);
+  for (var index = 0, length = keys.length; index < length; index++) {
+    console.log(keys[index]);
   }
-});        
-
+});

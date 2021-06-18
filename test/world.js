@@ -1,12 +1,22 @@
-var tester = require("../test-util/util.js");
+import tester from "../test-util/util.js";
 
-describe("Running world programs", function() {
+describe("Running world programs", function () {
   beforeEach(tester.setup);
   afterEach(tester.teardown);
 
   var worldTestsBase = "./test-util/pyret-programs/world/";
-  tester.doForEachPyretFile(it, "world", worldTestsBase, function(programText, testObj) {
-    tester.checkWorldProgramRunsCleanly(programText, testObj.browser, testObj.test, 900000);
-  }, 900000);
-
+  tester.doForEachPyretFile(
+    it,
+    "world",
+    worldTestsBase,
+    function (programText, testObject) {
+      tester.checkWorldProgramRunsCleanly(
+        programText,
+        testObject.browser,
+        testObject.test,
+        900_000
+      );
+    },
+    900_000
+  );
 });

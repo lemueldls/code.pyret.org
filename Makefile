@@ -104,9 +104,6 @@ build/web/js/q.js: node_modules/q/q.js
 build/web/js/s-expression-lib.js: node_modules/s-expression/index.js
 	cp $< $@
 
-build/web/js/colorspaces.js: node_modules/colorspaces/colorspaces.js
-	cp $< $@
-
 build/web/js/es6-shim.js: node_modules/es6-shim/es6-shim.min.js
 	cp $< $@
 
@@ -170,7 +167,6 @@ MISC_JS = build/web/js/q.js build/web/js/url.js build/web/js/require.js \
           build/web/js/matchkw.js \
           build/web/js/foldcode.js \
           build/web/js/foldgutter.js \
-          build/web/js/colorspaces.js \
           build/web/js/es6-shim.js \
           build/web/js/runmode.js \
 					build/web/js/mousetrap.min.js \
@@ -245,7 +241,7 @@ libpyret:
 	$(MAKE) phaseA -C pyret/
 
 $(BUNDLED_DEPS): src/scripts/npm-dependencies.js
-	node_modules/.bin/browserify src/scripts/npm-dependencies.js -o $(BUNDLED_DEPS)
+	node_modules/.bin/browserify src/scripts/npm-dependencies.js -p esmify -o $(BUNDLED_DEPS)
 
 $(CPOMAIN): $(BUNDLED_DEPS) $(TROVE_JS) $(TROVE_ARR) $(WEBJS) src/web/js/*.js src/web/arr/*.arr cpo-standalone.js cpo-config.json src/web/arr/cpo-main.arr $(PHASEA)
 	mkdir -p compiled/;

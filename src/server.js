@@ -1,21 +1,24 @@
-var Q = require("q");
-var gapi = require("googleapis").google; // https://github.com/googleapis/google-auth-library-nodejs/issues/355
-var path = require("path");
+import Q from "q";
+import { google as gapi } from "googleapis"; // https://github.com/googleapis/google-auth-library-nodejs/issues/355
+import path from "path";
+import { fileURLToPath } from "url";
+
+import express from "express";
+import cookieSession from "cookie-session";
+import cookieParser from "cookie-parser";
+import bodyParser from "body-parser";
+import csrf from "csurf";
+import googleAuth from "./google-auth.js";
+import request from "request";
+import mustache from "mustache-express";
+import url from "url";
+import fs from "fs";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 var BACKREF_KEY = "originalProgram";
 
 function start(config, onServerReady) {
-  var express = require("express");
-  var cookieSession = require("cookie-session");
-  var cookieParser = require("cookie-parser");
-  var bodyParser = require("body-parser");
-  var csrf = require("csurf");
-  var googleAuth = require("./google-auth.js");
-  var request = require("request");
-  var mustache = require("mustache-express");
-  var url = require("url");
-  var fs = require("fs");
-
   function loggedIn(req) {
     var session = req.session;
     return session && session["user_id"];
@@ -38,7 +41,7 @@ function start(config, onServerReady) {
     return login.promise;
   }
 
-  app = express();
+  const app = express();
   app.use(bodyParser.urlencoded({ extended: false }));
   app.use(bodyParser.json());
 
@@ -696,6 +699,4 @@ function start(config, onServerReady) {
   onServerReady(app, server);
 }
 
-module.exports = {
-  start: start,
-};
+export default { start };
