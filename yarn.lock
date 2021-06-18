@@ -2733,7 +2733,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"caniuse-lite@npm:^1.0.30001219":
+"caniuse-lite@npm:^1.0.30001219, caniuse-lite@npm:^1.0.30001238":
   version: 1.0.30001238
   resolution: "caniuse-lite@npm:1.0.30001238"
   checksum: ae5e743214162a37b56bea4964a3a9f36df122e57fcaaad91ab01198cb58702a6b4c611aa4ab3dfb75ea6f80c4315fb758c7aa08a4c589bfd3e251bc0041804a
@@ -2926,6 +2926,7 @@ __metadata:
     body-parser: ^1.19.0
     bootstrap: ^5.0.1
     browserify: ^17.0.0
+    caniuse-lite: ^1.0.30001238
     chromedriver: ^91.0.1
     codemirror: ^5.61.1
     cookie-parser: ^1.4.5
